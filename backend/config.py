@@ -7,11 +7,11 @@ class Config:
     """Configuración base de la aplicación"""
     
     # Configuración de Base de Datos MySQL
-    DB_HOST = os.getenv('DB_HOST', 'atusaludlicoreria.com')
-    DB_USER = os.getenv('DB_USER', 'atusalud_atusalud')
-    DB_PASSWORD = os.getenv('DB_PASSWORD', 'kmachin1')
+    DB_HOST = os.getenv('DB_HOST')
+    DB_USER = os.getenv('DB_USER')
+    DB_PASSWORD = os.getenv('DB_PASSWORD')
     DB_PORT = int(os.getenv('DB_PORT', 3306))
-    DB_NAME = os.getenv('DB_NAME', 'atusalud_base1')
+    DB_NAME = os.getenv('DB_NAME')
     
     # Configuración de Redis (Cache)
     REDIS_HOST = os.getenv('REDIS_HOST', 'localhost')
@@ -19,8 +19,26 @@ class Config:
     REDIS_DB = int(os.getenv('REDIS_DB', 0))
     
     # Configuración de Flask
-    SECRET_KEY = os.getenv('SECRET_KEY', 'licoreria_ats_secret_key_2024')
+    SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
+    
+    @classmethod
+    def validate_config(cls):
+        """Validar que las variables críticas estén configuradas"""
+        required_vars = {
+            'DB_HOST': cls.DB_HOST,
+            'DB_USER': cls.DB_USER,
+            'DB_PASSWORD': cls.DB_PASSWORD,
+            'DB_NAME': cls.DB_NAME,
+            'SECRET_KEY': cls.SECRET_KEY
+        }
+        
+        missing_vars = [var for var, value in required_vars.items() if not value]
+        
+        if missing_vars:
+            raise ValueError(f"Variables de entorno requeridas no configuradas: {', '.join(missing_vars)}")
+        
+        return True
     
     # Configuración de Cache
     CACHE_TYPE = 'simple'  # Usar caché en memoria en lugar de Redis

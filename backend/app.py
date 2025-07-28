@@ -8,6 +8,15 @@ import time
 def create_app():
     """Crear aplicación Flask optimizada"""
     
+    # Validar configuración antes de crear la app
+    try:
+        Config.validate_config()
+        print("✅ Configuración validada correctamente")
+    except ValueError as e:
+        print(f"❌ Error en configuración: {e}")
+        print("📝 Asegúrate de que el archivo .env esté configurado correctamente")
+        raise
+    
     app = Flask(__name__)
     app.config.from_object(Config)
     
