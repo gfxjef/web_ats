@@ -140,6 +140,12 @@ interface RecommendedApiResponse {
   };
 }
 
+// Función utilitaria para obtener la URL base de la API
+const getApiUrl = (endpoint: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001';
+  return `${baseUrl}${endpoint}`;
+};
+
 // Caché local para categorías
 let categoriesCache: Category[] | null = null;
 let cacheTimestamp: number = 0;
@@ -185,7 +191,7 @@ export default function HomePage() {
 
       // Llamada al endpoint optimizada
       const startTime = performance.now();
-      const response = await fetch('http://127.0.0.1:5001/api/v1/productos/categorias?limit=10', {
+      const response = await fetch(getApiUrl('/api/v1/productos/categorias?limit=10'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -238,7 +244,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de whiskies
       const startTime = performance.now();
-      const response = await fetch('http://127.0.0.1:5001/api/v1/productos/categorias/WHISKY?limit=5', {
+      const response = await fetch(getApiUrl('/api/v1/productos/categorias/WHISKY?limit=5'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -319,7 +325,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de combos con offset=5 para obtener diferentes combos
       const startTime = performance.now();
-      const response = await fetch('http://127.0.0.1:5001/api/v1/productos/sub_categorias/combos?limit=10&offset=5', {
+      const response = await fetch(getApiUrl('/api/v1/productos/sub_categorias/combos?limit=10&offset=5'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -400,7 +406,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de piscos con offset=10 para obtener diferentes productos
       const startTime = performance.now();
-      const response = await fetch('http://127.0.0.1:5001/api/v1/productos/sub_categorias/piscos?limit=10&offset=10', {
+      const response = await fetch(getApiUrl('/api/v1/productos/sub_categorias/piscos?limit=10&offset=10'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',

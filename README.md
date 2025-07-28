@@ -186,8 +186,16 @@ FLASK_DEBUG=True
 
 ### Variables de Entorno (Frontend)
 ```env
+# Desarrollo
 NEXT_PUBLIC_API_URL=http://127.0.0.1:5001
+NODE_ENV=development
+
+# Producción
+NEXT_PUBLIC_API_URL=https://api.tudominio.com
+NODE_ENV=production
 ```
+
+**Nota**: Para cambiar entre desarrollo y producción, solo modifica `NEXT_PUBLIC_API_URL` en el archivo `frontend/.env`
 
 ## 🚀 Despliegue
 
