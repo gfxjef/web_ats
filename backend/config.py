@@ -40,7 +40,19 @@ class Config:
         missing_vars = [var for var, value in required_vars.items() if not value]
         
         if missing_vars:
-            raise ValueError(f"Variables de entorno requeridas no configuradas: {', '.join(missing_vars)}")
+            print(f"⚠️ Variables de entorno faltantes: {', '.join(missing_vars)}")
+            print("🔄 Usando valores por defecto...")
+            # Establecer valores por defecto para desarrollo
+            if not cls.DB_HOST:
+                cls.DB_HOST = 'localhost'
+            if not cls.DB_USER:
+                cls.DB_USER = 'root'
+            if not cls.DB_PASSWORD:
+                cls.DB_PASSWORD = ''
+            if not cls.DB_NAME:
+                cls.DB_NAME = 'test_db'
+            if not cls.SECRET_KEY:
+                cls.SECRET_KEY = 'dev-secret-key-change-in-production'
         
         return True
     

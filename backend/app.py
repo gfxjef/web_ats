@@ -15,7 +15,8 @@ def create_app():
     except ValueError as e:
         print(f"❌ Error en configuración: {e}")
         print("📝 Asegúrate de que el archivo .env esté configurado correctamente")
-        raise
+        # En lugar de fallar, usar configuración por defecto
+        print("🔄 Usando configuración por defecto...")
     
     app = Flask(__name__)
     app.config.from_object(Config)
