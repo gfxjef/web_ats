@@ -22,6 +22,10 @@ class Config:
     SECRET_KEY = os.getenv('SECRET_KEY')
     DEBUG = os.getenv('FLASK_DEBUG', 'True').lower() == 'true'
     
+    # Configuración de puerto para Render
+    PORT = int(os.environ.get('PORT', 5001))
+    HOST = '0.0.0.0'
+    
     @classmethod
     def validate_config(cls):
         """Validar que las variables críticas estén configuradas"""

@@ -162,7 +162,7 @@ def create_app():
 if __name__ == '__main__':
     app = create_app()
     app.run(
-        host=Config.FLASK_RUN_HOST if hasattr(Config, 'FLASK_RUN_HOST') else '0.0.0.0',
-        port=Config.FLASK_RUN_PORT if hasattr(Config, 'FLASK_RUN_PORT') else 5001,
+        host=Config.HOST,
+        port=Config.PORT,
         debug=Config.DEBUG
     ) 
