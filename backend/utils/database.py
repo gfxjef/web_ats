@@ -94,4 +94,13 @@ class DatabaseManager:
         }
 
 # Instancia global del gestor de base de datos
-db_manager = DatabaseManager() 
+db_manager = DatabaseManager()
+
+def get_db_connection():
+    """Función de compatibilidad para obtener conexión"""
+    return db_manager.get_connection()
+
+def close_db_connection(connection):
+    """Función de compatibilidad para cerrar conexión"""
+    if connection:
+        connection.close() 

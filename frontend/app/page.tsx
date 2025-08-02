@@ -1,10 +1,15 @@
 "use client";
 
-import { Search, Home, Grid3X3, Percent, Package, ShoppingCart, ChevronDown, Plus } from "lucide-react";
+import { Search, ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ProductRowSkeleton } from "@/components/ui/product-card-skeleton";
+import { useLiquorToast } from "@/hooks/use-liquor-toast";
+import { useCartContext } from "@/contexts/cart-context";
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import Link from "next/link";
+import { useState, useEffect, useMemo, useCallback } from "react";
 
 // Tipos para las categorías
 interface Category {
@@ -152,10 +157,11 @@ let cacheTimestamp: number = 0;
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
 
 export default function HomePage() {
-  const [activeTab, setActiveTab] = useState('home');
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const toast = useLiquorToast();
+  const { addItem } = useCartContext();
   
   // Estado para whiskies
   const [whiskies, setWhiskies] = useState<WhiskyProduct[]>([]);
@@ -171,6 +177,12 @@ export default function HomePage() {
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProduct[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(true);
   const [recommendedError, setRecommendedError] = useState<string | null>(null);
+  
+  // Estados para búsqueda
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<WhiskyProduct[]>([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [showSearchDropdown, setShowSearchDropdown] = useState(false);
 
   // Estado global de loading para optimizar UX
   const [globalLoading, setGlobalLoading] = useState(true);
@@ -244,7 +256,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de whiskies
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/categorias/WHISKY?limit=5'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/categoria/WHISKY?limit=5'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -325,7 +337,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de combos con offset=5 para obtener diferentes combos
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/sub_categorias/combos?limit=10&offset=5'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Combos?limit=10&offset=5'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -406,7 +418,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de piscos con offset=10 para obtener diferentes productos
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/sub_categorias/piscos?limit=10&offset=10'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Piscos?limit=10&offset=10'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -578,6 +590,64 @@ export default function HomePage() {
     };
   }, []);
 
+  // Función de búsqueda de productos
+  const searchProducts = useCallback(async (query: string) => {
+    if (!query.trim() || query.length < 2) {
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    
+    try {
+      const response = await fetch(getApiUrl(`/api/v1/productos/buscar/${encodeURIComponent(query)}?limit=10`), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'default',
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        setSearchResults(data.data);
+        setShowSearchDropdown(true);
+      } else {
+        setSearchResults([]);
+        setShowSearchDropdown(false);
+      }
+    } catch (error) {
+      console.error('Error en búsqueda:', error);
+      setSearchResults([]);
+      setShowSearchDropdown(false);
+    } finally {
+      setSearchLoading(false);
+    }
+  }, []);
+
+  // Debounce para la búsqueda
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      searchProducts(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timeoutId);
+  }, [searchQuery, searchProducts]);
+
+  // Manejar clic en resultado de búsqueda
+  const handleSearchResultClick = (productId: number) => {
+    setShowSearchDropdown(false);
+    setSearchQuery('');
+    // Navegar al producto
+    window.location.href = `/product/${productId}`;
+  };
+
   // Datos estáticos de productos recomendados eliminados - ahora se cargan dinámicamente desde la API
 
   // Datos estáticos de combos eliminados - ahora se cargan dinámicamente desde la API
@@ -613,11 +683,59 @@ export default function HomePage() {
       {/* Search Bar */}
       <div className="px-4 py-4">
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 z-10" />
           <Input 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => searchQuery && setShowSearchDropdown(true)}
+            onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
             placeholder="Search for Beer, Wine, Liquor & More"
             className="pl-10 py-3 rounded-xl border-gray-200 bg-white text-gray-600"
           />
+          
+          {/* Dropdown de resultados */}
+          {showSearchDropdown && (
+            <div className="absolute top-full left-0 right-0 bg-white border border-gray-200 rounded-xl shadow-lg mt-1 max-h-60 overflow-y-auto z-20">
+              {searchLoading ? (
+                <div className="p-4 text-center text-gray-500">
+                  <div className="animate-spin w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full mx-auto mb-2"></div>
+                  Buscando...
+                </div>
+              ) : searchResults.length > 0 ? (
+                <>
+                  {searchResults.map((product) => (
+                    <div
+                      key={product.id}
+                      onClick={() => handleSearchResultClick(product.id)}
+                      className="flex items-center p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                    >
+                      <div className="w-12 h-12 bg-gray-100 rounded-lg overflow-hidden mr-3 flex-shrink-0">
+                        <Image
+                          src={product.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"}
+                          alt={product.Nombre}
+                          width={48}
+                          height={48}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-gray-900 text-sm truncate">{product.Nombre}</h4>
+                        <p className="text-xs text-gray-500 truncate">{product.Categoria} • {product.Tamaño}</p>
+                        <p className="text-sm font-semibold text-gray-900">S/{product['Precio B']}</p>
+                      </div>
+                    </div>
+                  ))}
+                  <div className="p-2 text-center border-t border-gray-100">
+                    <p className="text-xs text-gray-500">Mostrando {searchResults.length} resultados</p>
+                  </div>
+                </>
+              ) : searchQuery.length >= 2 ? (
+                <div className="p-4 text-center text-gray-500">
+                  <p className="text-sm">No se encontraron productos para "{searchQuery}"</p>
+                </div>
+              ) : null}
+            </div>
+          )}
         </div>
       </div>
 
@@ -628,8 +746,8 @@ export default function HomePage() {
             // Loading skeleton optimizado
             Array.from({ length: 5 }).map((_, index) => (
               <div key={`loading-${index}`} className="flex flex-col items-center space-y-2 min-w-[80px]">
-                <div className="w-16 h-16 bg-gray-200 rounded-2xl animate-pulse"></div>
-                <div className="w-12 h-3 bg-gray-200 rounded animate-pulse"></div>
+                <Skeleton shape="rounded" width={64} height={64} />
+                <Skeleton width={48} height={12} />
               </div>
             ))
           ) : error ? (
@@ -637,8 +755,12 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error: {error}</p>
             </div>
           ) : (
-            categories.map((category, index) => (
-              <div key={index} className="flex flex-col items-center space-y-2 min-w-[80px]">
+            categories.slice(0, 10).map((category, index) => (
+              <Link 
+                key={index} 
+                href={`/categoria/${encodeURIComponent(category.Categoria)}`}
+                className="flex flex-col items-center space-y-2 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
+              >
                 <div className={`w-16 h-16 ${getCategoryStyle(category.Categoria).bgColor} rounded-2xl flex items-center justify-center overflow-hidden`}>
                   <Image 
                     src={getCategoryStyle(category.Categoria).image}
@@ -649,7 +771,7 @@ export default function HomePage() {
                   />
                 </div>
                 <span className="text-sm font-medium text-gray-800">{formatCategoryName(category.Categoria)}</span>
-              </div>
+              </Link>
             ))
           )}
         </div>
@@ -709,43 +831,54 @@ export default function HomePage() {
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
           {recommendedLoading ? (
-            // Loading skeleton para productos recomendados
-            Array.from({ length: 5 }).map((_, index) => (
-              <div key={`recommended-loading-${index}`} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gray-200 rounded-xl animate-pulse"></div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            ))
+            <ProductRowSkeleton count={5} showPrice={false} />
           ) : recommendedError ? (
             <div className="flex items-center justify-center w-full py-4">
               <p className="text-red-500 text-sm">Error cargando recomendados: {recommendedError}</p>
             </div>
           ) : (
             recommendedProducts.map((product) => (
-              <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden">
-                    <Image 
-                      src={product.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
-                      alt={product.Nombre}
-                      width={160}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
+              <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
+                <Link href={`/product/${product.id}`} className="block">
+                  <div className="relative mb-3">
+                    <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden">
+                      <Image 
+                        src={product.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
+                        alt={product.Nombre}
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
-                  <Button 
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <h4 className="font-semibold text-gray-900 text-sm leading-tight">{product.Nombre}</h4>
+                  <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{product.Nombre}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{product.Modelo}</p>
+                  <p className="text-lg font-bold text-gray-900 mt-2">S/{product['Precio B']}</p>
+                </Link>
+                <Button 
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addItem({
+                      id: product.id,
+                      SKU: product.SKU,
+                      Nombre: product.Nombre,
+                      Modelo: product.Modelo,
+                      Tamaño: product.Tamaño,
+                      'Precio B': product['Precio B'],
+                      'Precio J': product['Precio J'],
+                      Categoria: product.Categoria,
+                      'Sub Categoria': product['Sub Categoria'],
+                      Stock: product.Stock,
+                      Photo: product.Photo,
+                    }, 1);
+                    toast.productAdded(product.Nombre, 1, product['Precio B']);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
             ))
           )}
@@ -761,55 +894,60 @@ export default function HomePage() {
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
           {combosLoading ? (
-            // Loading skeleton para combos
-            Array.from({ length: 5 }).map((_, index) => (
-              <div key={`combo-loading-${index}`} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gray-200 rounded-xl animate-pulse"></div>
-                  <div className="absolute top-2 left-2 bg-gray-200 text-white px-2 py-1 rounded-full text-xs font-bold animate-pulse">COMBO</div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-1/2 h-6 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-1/3 h-4 bg-gray-200 rounded animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
-            ))
+            <ProductRowSkeleton count={5} showPrice={true} />
           ) : combosError ? (
             <div className="flex items-center justify-center w-full py-4">
               <p className="text-red-500 text-sm">Error cargando combos: {combosError}</p>
             </div>
           ) : (
             combos.map((combo) => (
-              <div key={combo.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden">
-                    <Image 
-                      src={combo.Photo || "https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
-                      alt={combo.Nombre}
-                      width={160}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
+              <div key={combo.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
+                <Link href={`/product/${combo.id}`} className="block">
+                  <div className="relative mb-3">
+                    <div className="w-full h-40 bg-gray-100 rounded-xl overflow-hidden">
+                      <Image 
+                        src={combo.Photo || "https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
+                        alt={combo.Nombre}
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                      COMBO
+                    </div>
                   </div>
-                  <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-                    COMBO
+                  <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{combo.Nombre}</h4>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">{combo.Modelo}</p>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg font-bold text-gray-900">S/{combo['Precio B']}</span>
+                    <span className="text-sm text-gray-500 line-through">S/{combo['Precio J']}</span>
                   </div>
-                  <Button 
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <h4 className="font-semibold text-gray-900 text-sm leading-tight mb-2">{combo.Nombre}</h4>
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-bold text-gray-900">₹{combo['Precio B']}</span>
-                  <span className="text-sm text-gray-500 line-through">₹{combo['Precio J']}</span>
-                </div>
+                </Link>
+                <Button 
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addItem({
+                      id: combo.id,
+                      SKU: combo.SKU,
+                      Nombre: combo.Nombre,
+                      Modelo: combo.Modelo,
+                      Tamaño: combo.Tamaño,
+                      'Precio B': combo['Precio B'],
+                      'Precio J': combo['Precio J'],
+                      Categoria: combo.Categoria,
+                      'Sub Categoria': combo['Sub Categoria'],
+                      Stock: combo.Stock,
+                      Photo: combo.Photo,
+                    }, 1);
+                    toast.productAdded(combo.Nombre, 1, combo['Precio B']);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
             ))
           )}
@@ -825,97 +963,66 @@ export default function HomePage() {
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
           {whiskiesLoading ? (
-            // Loading skeleton para whiskies
-            Array.from({ length: 5 }).map((_, index) => (
-              <div key={`whisky-loading-${index}`} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gray-200 rounded-xl animate-pulse"></div>
-                  <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
-                </div>
-                <div className="space-y-2">
-                  <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
-                  <div className="w-1/2 h-6 bg-gray-200 rounded animate-pulse"></div>
-                </div>
-              </div>
-            ))
+            <ProductRowSkeleton count={5} showPrice={true} />
           ) : whiskiesError ? (
             <div className="flex items-center justify-center w-full py-4">
               <p className="text-red-500 text-sm">Error cargando whiskies: {whiskiesError}</p>
             </div>
           ) : (
             whiskies.map((whisky) => (
-              <div key={whisky.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 min-w-[160px] flex-shrink-0">
-                <div className="relative mb-3">
-                  <div className="w-full h-40 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl overflow-hidden">
-                    <Image 
-                      src={whisky.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
-                      alt={whisky.Nombre}
-                      width={160}
-                      height={160}
-                      className="w-full h-full object-cover"
-                    />
+              <div key={whisky.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
+                <Link href={`/product/${whisky.id}`} className="block">
+                  <div className="relative mb-3">
+                    <div className="w-full h-40 bg-gradient-to-br from-amber-50 to-amber-100 rounded-xl overflow-hidden">
+                      <Image 
+                        src={whisky.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
+                        alt={whisky.Nombre}
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
-                  <Button 
-                    size="sm"
-                    className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0"
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <h4 className="font-semibold text-gray-900 text-sm leading-tight mb-2">{whisky.Nombre}</h4>
-                <div className="flex items-center justify-between">
-                  <span className="text-lg font-bold text-gray-900">₹{whisky['Precio B']}</span>
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                    <span className="text-xs text-amber-600 font-medium">{whisky['Sub Categoria Nivel'] || 'Premium'}</span>
+                  <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{whisky.Nombre}</h4>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">{whisky.Modelo}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-gray-900">S/{whisky['Precio B']}</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                      <span className="text-xs text-amber-600 font-medium">{whisky['Sub Categoria Nivel'] || 'Premium'}</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
+                <Button 
+                  size="sm"
+                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addItem({
+                      id: whisky.id,
+                      SKU: whisky.SKU,
+                      Nombre: whisky.Nombre,
+                      Modelo: whisky.Modelo,
+                      Tamaño: whisky.Tamaño,
+                      'Precio B': whisky['Precio B'],
+                      'Precio J': whisky['Precio J'],
+                      Categoria: whisky.Categoria,
+                      'Sub Categoria': whisky['Sub Categoria'],
+                      Stock: whisky.Stock,
+                      Photo: whisky.Photo,
+                    }, 1);
+                    toast.productAdded(whisky.Nombre, 1, whisky['Precio B']);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
               </div>
             ))
           )}
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50 max-w-md mx-auto">
-        <div className="flex justify-around items-center">
-          <button 
-            onClick={() => setActiveTab('home')}
-            className="flex flex-col items-center space-y-1"
-          >
-            <Home className={`w-6 h-6 ${activeTab === 'home' ? 'text-gray-900' : 'text-gray-400'}`} />
-            <span className={`text-xs ${activeTab === 'home' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Home</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('categories')}
-            className="flex flex-col items-center space-y-1"
-          >
-            <Grid3X3 className={`w-6 h-6 ${activeTab === 'categories' ? 'text-gray-900' : 'text-gray-400'}`} />
-            <span className={`text-xs ${activeTab === 'categories' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Categories</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('offers')}
-            className="flex flex-col items-center space-y-1"
-          >
-            <Percent className={`w-6 h-6 ${activeTab === 'offers' ? 'text-gray-900' : 'text-gray-400'}`} />
-            <span className={`text-xs ${activeTab === 'offers' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Offers</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('orders')}
-            className="flex flex-col items-center space-y-1"
-          >
-            <Package className={`w-6 h-6 ${activeTab === 'orders' ? 'text-gray-900' : 'text-gray-400'}`} />
-            <span className={`text-xs ${activeTab === 'orders' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Orders</span>
-          </button>
-          <button 
-            onClick={() => setActiveTab('cart')}
-            className="flex flex-col items-center space-y-1"
-          >
-            <ShoppingCart className={`w-6 h-6 ${activeTab === 'cart' ? 'text-gray-900' : 'text-gray-400'}`} />
-            <span className={`text-xs ${activeTab === 'cart' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Cart</span>
-          </button>
-        </div>
-      </div>
 
       {/* Bottom padding to account for fixed navigation */}
       <div className="h-24"></div>

@@ -1,547 +1,367 @@
-# 🚀 API Documentation - Licorería ATS
+# Documentación de Endpoints de la API
 
-## 📋 Información General
+Esta documentación detalla los endpoints disponibles en el backend, incluyendo los datos de entrada y salida esperados.
 
-### Base URL
-```
-http://127.0.0.1:5001
-```
+## Endpoints de Productos
 
-### Versión de API
-```
-v1
-```
-
-### Formato de Respuesta
-Todas las respuestas incluyen métricas de performance:
-```json
-{
-  "success": true,
-  "data": [...],
-  "meta": {
-    "total": 150,
-    "limit": 20,
-    "offset": 0,
-    "has_more": true
-  },
-  "performance": {
-    "total_time": 0.123,
-    "db_execution_time": 0.098,
-    "cache_hit": false,
-    "query_optimization": [...]
-  }
-}
-```
+Todos los endpoints de productos se encuentran bajo el prefijo `/api/v1/productos`.
 
 ---
 
-## 🎯 Endpoints de Productos
+### Obtener productos por subcategoría
 
-### 1. **Lista de Categorías** ⭐ NUEVO
-**Obtener lista de categorías únicas ordenadas por popularidad**
-
-```http
-GET /api/v1/productos/categorias
-```
-
-#### Parámetros de Query
-| Parámetro | Tipo | Descripción | Por Defecto |
-|-----------|------|-------------|-------------|
-| `limit` | integer | Cantidad máxima de categorías | 10 |
-
-#### Ejemplos de Uso
-```bash
-# Obtener las 10 categorías principales
-curl "http://127.0.0.1:5001/api/v1/productos/categorias"
-
-# Obtener solo las 5 categorías principales
-curl "http://127.0.0.1:5001/api/v1/productos/categorias?limit=5"
-```
-
-#### Respuesta
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "Categoria": "CERVEZA",
-      "total_productos": 153
+- **Método:** `GET`
+- **Ruta:** `/sub_categorias/<valor>`
+- **Descripción:** Obtiene una lista de productos que pertenecen a una subcategoría específica.
+- **Parámetros de URL:**
+  - `valor` (string, requerido): El nombre de la subcategoría.
+- **Parámetros de Query:**
+  - `limit` (integer, opcional): Número máximo de productos a devolver.
+  - `offset` (integer, opcional): Número de productos a omitir para la paginación.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": 1,
+        "nombre": "Producto 1",
+        "sku": "SKU001",
+        "categoria": "Categoria A",
+        "sub_categoria": "Sub A",
+        "tamaño": "750ml",
+        "stock": "in stock"
+      }
+    ],
+    "meta": {
+      "subcategoria": "Sub A",
+      "total": 100,
+      "limit": 10,
+      "offset": 0,
+      "has_more": true
     },
-    {
-      "Categoria": "WHISKY",
-      "total_productos": 78
+    "performance": {
+      "total_time": 0.123,
+      "db_execution_time": 0.050,
+      "cache_hit": false,
+      "query_optimization": "index_scan"
     }
-  ],
-  "meta": {
-    "total": 10,
-    "limit": 10
-  },
-  "performance": {
-    "total_time": 0.000123,
-    "db_execution_time": 0.315442,
-    "cache_hit": false
   }
-}
-```
-
-#### Performance
-- **Primera consulta**: ~1.7 segundos
-- **Consultas con caché**: ~0.00003 segundos
-- **Mejora con caché**: 99.998% más rápido
+  ```
+- **Respuesta de Error (500 Internal Server Error):**
+  ```json
+  {
+    "success": false,
+    "error": "Descripción del error.",
+    "performance": {
+      "total_time": 0.010
+    }
+  }
+  ```
 
 ---
 
-### 2. **Productos Combos**
-**Endpoint específico optimizado para productos Combos**
+### Obtener productos por categoría
 
-```http
-GET /api/v1/productos/combos
-```
+- **Método:** `GET`
+- **Ruta:** `/categorias/<valor>`
+- **Descripción:** Obtiene una lista de productos que pertenecen a una categoría específica.
+- **Parámetros de URL:**
+  - `valor` (string, requerido): El nombre de la categoría.
+- **Parámetros de Query:**
+  - `limit` (integer, opcional): Número máximo de productos a devolver.
+  - `offset` (integer, opcional): Número de productos a omitir para la paginación.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "nombre": "Producto 1",
+            "sku": "SKU001",
+            "categoria": "Categoria A",
+            "sub_categoria": "Sub A",
+            "tamaño": "750ml",
+            "stock": "in stock"
+        }
+    ],
+    "meta": {
+        "categoria": "Categoria A",
+        "total": 50,
+        "limit": 10,
+        "offset": 0,
+        "has_more": true
+    },
+    "performance": {
+        "total_time": 0.1,
+        "db_execution_time": 0.04,
+        "cache_hit": true,
+        "query_optimization": "index_scan"
+    }
+  }
+  ```
 
-#### Parámetros de Query
-- `limit` (opcional): Número de productos por página
-- `offset` (opcional): Número de productos a saltar
+---
 
-#### Ejemplo de Uso
-```bash
-curl "http://127.0.0.1:5001/api/v1/productos/combos?limit=10&offset=0"
-```
+### Obtener producto por SKU
 
-#### Respuesta
-```json
-{
-  "success": true,
-  "data": [
-    {
+- **Método:** `GET`
+- **Ruta:** `/sku/<valor>`
+- **Descripción:** Obtiene un producto específico por su SKU.
+- **Parámetros de URL:**
+  - `valor` (string, requerido): El SKU del producto.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": {
       "id": 1,
-      "SKU": "COMBO001",
-      "Nombre": "Combo Whisky Premium",
-      "Modelo": "Premium",
-      "Tamaño": "750 ML",
-      "Precio B": 150.00,
-      "Precio J": 180.00,
-      "Categoria": "WHISKY",
-      "Sub Categoria": "Combos",
-      "Stock": "Con Stock",
-      "Sub Categoria Nivel": "Premium",
-      "Al Por Mayor": "Sí",
-      "Top_S_Sku": "COMBO001",
-      "Product_asig": "Asignado",
-      "Descripcion": "Combo premium de whisky",
-      "Cantidad": 10,
-      "Photo": "combo_whisky.jpg"
+      "nombre": "Producto 1",
+      "sku": "SKU001",
+      "categoria": "Categoria A",
+      "sub_categoria": "Sub A",
+      "tamaño": "750ml",
+      "stock": "in stock"
+    },
+    "performance": {
+      "total_time": 0.05,
+      "db_execution_time": 0.02,
+      "cache_hit": false,
+      "query_optimization": "primary_key"
     }
-  ],
-  "meta": {
-    "subcategoria": "Combos",
-    "total": 112,
-    "limit": 10,
-    "offset": 0,
-    "has_more": true
-  },
-  "performance": {
-    "total_time": 0.098,
-    "db_execution_time": 0.076,
-    "cache_hit": false
   }
-}
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.3 segundos
-- **Total productos**: 112 combos
-- **Optimización**: Usa índice `idx_sub_categoria`
-
----
-
-### 3. **Filtros Dinámicos por Categoría**
-**Obtener productos filtrados por categoría principal**
-
-```http
-GET /api/v1/productos/categorias/{valor}
-```
-
-#### Parámetros de Path
-- `valor` (requerido): Nombre de la categoría (WHISKY, RON, PISCO, etc.)
-
-#### Parámetros de Query
-- `limit` (opcional): Número de productos por página
-- `offset` (opcional): Número de productos a saltar
-
-#### Ejemplos de Uso
-```bash
-# Primeros 15 productos de WHISKY
-curl "http://127.0.0.1:5001/api/v1/productos/categorias/WHISKY?limit=15"
-
-# Página 3 de VODKA (productos 21-30)
-curl "http://127.0.0.1:5001/api/v1/productos/categorias/VODKA?limit=10&offset=20"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.5 segundos
-- **Optimización**: Usa índice `idx_categoria`
-
----
-
-### 4. **Filtros Dinámicos por Subcategoría**
-**Obtener productos filtrados por subcategoría específica**
-
-```http
-GET /api/v1/productos/sub_categorias/{valor}
-```
-
-#### Parámetros de Path
-- `valor` (requerido): Nombre de la subcategoría
-
-#### Parámetros de Query
-- `limit` (opcional): Número de productos por página
-- `offset` (opcional): Número de productos a saltar
-
-#### Ejemplos de Uso
-```bash
-# Primeros 10 productos de Combos
-curl "http://127.0.0.1:5001/api/v1/productos/sub_categorias/combos?limit=10"
-
-# Página 2 de Combos (productos 11-20)
-curl "http://127.0.0.1:5001/api/v1/productos/sub_categorias/combos?limit=10&offset=10"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.5 segundos
-- **Optimización**: Usa índice `idx_sub_categoria`
-
----
-
-### 5. **Filtros por Stock**
-**Filtrar productos por estado de disponibilidad**
-
-```http
-GET /api/v1/productos/stock/{valor}
-```
-
-#### Parámetros de Path
-- `valor` (requerido): Estado de stock ("Con Stock", "Sin Stock")
-
-#### Parámetros de Query
-- `limit` (opcional): Número de productos por página
-- `offset` (opcional): Número de productos a saltar
-
-#### Ejemplos de Uso
-```bash
-# Primeros 20 productos con stock
-curl "http://127.0.0.1:5001/api/v1/productos/stock/Con%20Stock?limit=20"
-
-# Página 2 de productos sin stock
-curl "http://127.0.0.1:5001/api/v1/productos/stock/Sin%20Stock?limit=10&offset=10"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.5 segundos
-- **Optimización**: Usa índice `idx_stock`
-
----
-
-### 6. **Filtros por Tamaño**
-**Filtrar productos por tamaño específico**
-
-```http
-GET /api/v1/productos/tamaño/{valor}
-```
-
-#### Parámetros de Path
-- `valor` (requerido): Tamaño del producto (750 ML, 1 LT, etc.)
-
-#### Parámetros de Query
-- `limit` (opcional): Número de productos por página
-- `offset` (opcional): Número de productos a saltar
-
-#### Ejemplos de Uso
-```bash
-# Primeros 8 productos de 750 ML
-curl "http://127.0.0.1:5001/api/v1/productos/tamaño/750%20ML?limit=8"
-
-# Página 2 de productos de 1 LT
-curl "http://127.0.0.1:5001/api/v1/productos/tamaño/1%20LT?limit=10&offset=10"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.5 segundos
-- **Optimización**: Usa índice `idx_tamaño`
-
----
-
-### 7. **Producto por SKU**
-**Obtener un producto específico por su código SKU**
-
-```http
-GET /api/v1/productos/sku/{valor}
-```
-
-#### Parámetros de Path
-- `valor` (requerido): Código SKU del producto
-
-#### Ejemplos de Uso
-```bash
-# Producto específico por SKU
-curl "http://127.0.0.1:5001/api/v1/productos/sku/11115.1"
-
-# Otro producto
-curl "http://127.0.0.1:5001/api/v1/productos/sku/12345.6"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.05-0.1 segundos
-- **Optimización**: Usa índice `idx_sku_p`
-
----
-
-### 8. **Producto por ID**
-**Obtener un producto específico por su ID**
-
-```http
-GET /api/v1/productos/{producto_id}
-```
-
-#### Parámetros de Path
-- `producto_id` (requerido): ID numérico del producto
-
-#### Ejemplos de Uso
-```bash
-# Producto específico por ID
-curl "http://127.0.0.1:5001/api/v1/productos/345"
-
-# Otro producto
-curl "http://127.0.0.1:5001/api/v1/productos/123"
-```
-
-#### Performance
-- **Tiempo promedio**: 0.05-0.1 segundos
-- **Optimización**: Usa índice `PRIMARY`
-
----
-
-### 9. **Estadísticas de Productos**
-**Obtener estadísticas generales de productos**
-
-```http
-GET /api/v1/productos/estadisticas
-```
-
-#### Respuesta
-```json
-{
-  "success": true,
-  "data": {
-    "total_productos": [
-      {
-        "total": 1042
-      }
-    ],
-    "por_categoria": [
-      {
-        "Categoria": "CERVEZA",
-        "total": 153
-      },
-      {
-        "Categoria": "WHISKY",
-        "total": 78
-      }
-    ],
-    "por_subcategoria": [
-      {
-        "Sub Categoria": "Combos",
-        "total": 112
-      }
-    ],
-    "por_stock": [
-      {
-        "Stock": "Con Stock",
-        "total": 671
-      },
-      {
-        "Stock": "Sin Stock",
-        "total": 338
-      }
-    ],
-    "precios": [
-      {
-        "min_precio": 15.50,
-        "max_precio": 500.00,
-        "avg_precio": 125.75
-      }
-    ]
-  },
-  "performance": {
-    "total_time": 0.156,
-    "db_execution_time": 0.134,
-    "cache_hit": false
-  }
-}
-```
-
-#### Performance
-- **Tiempo promedio**: 0.1-0.2 segundos
-- **Caché**: 5 minutos
-
----
-
-## 🔧 Endpoints del Sistema
-
-### 1. **Información de la API**
-**Endpoint de bienvenida con información del sistema**
-
-```http
-GET /
-```
-
-#### Respuesta
-```json
-{
-  "message": "Licorería ATS API - Backend Optimizado",
-  "version": "1.0.0",
-  "status": "running",
-  "endpoints": {
-    "productos": {
-      "categorias": "/api/v1/productos/categorias",
-      "combos": "/api/v1/productos/combos",
-      "sub_categorias": "/api/v1/productos/sub_categorias/{valor}",
-      "categorias_filtro": "/api/v1/productos/categorias/{valor}",
-      "stock": "/api/v1/productos/stock/{valor}",
-      "tamaño": "/api/v1/productos/tamaño/{valor}",
-      "sku": "/api/v1/productos/sku/{valor}",
-      "por_id": "/api/v1/productos/{id}",
-      "estadisticas": "/api/v1/productos/estadisticas"
+  ```
+- **Respuesta de Error (404 Not Found):**
+  ```json
+  {
+    "success": false,
+    "error": "Producto no encontrado",
+    "performance": {
+      "total_time": 0.01
     }
-  },
-  "optimizaciones": {
-    "indices_mysql": "8 índices creados",
-    "cache_simple": "Caché optimizado",
-    "consultas_optimizadas": "Uso de índices verificados"
   }
-}
-```
+  ```
 
 ---
 
-## 📊 Códigos de Estado HTTP
+### Obtener productos por estado de stock
 
-### Respuestas Exitosas
-- `200 OK`: Operación exitosa
-- `201 Created`: Recurso creado (futuro)
-
-### Errores del Cliente
-- `400 Bad Request`: Parámetros inválidos
-- `404 Not Found`: Endpoint o recurso no encontrado
-- `422 Unprocessable Entity`: Datos no procesables
-
-### Errores del Servidor
-- `500 Internal Server Error`: Error interno del servidor
-- `503 Service Unavailable`: Servicio no disponible
-
----
-
-## 🔍 Manejo de Errores
-
-### Formato de Error
-```json
-{
-  "success": false,
-  "error": "Descripción del error",
-  "performance": {
-    "total_time": 0.123
+- **Método:** `GET`
+- **Ruta:** `/stock/<valor>`
+- **Descripción:** Obtiene productos según su estado de stock.
+- **Parámetros de URL:**
+  - `valor` (string, requerido): El estado del stock (ej. "in stock", "out of stock").
+- **Parámetros de Query:**
+  - `limit` (integer, opcional): Número máximo de productos a devolver.
+  - `offset` (integer, opcional): Número de productos a omitir para la paginación.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "nombre": "Producto 1",
+            "sku": "SKU001",
+            "categoria": "Categoria A",
+            "sub_categoria": "Sub A",
+            "tamaño": "750ml",
+            "stock": "in stock"
+        }
+    ],
+    "meta": {
+        "stock_status": "in stock",
+        "total": 200,
+        "limit": 10,
+        "offset": 0,
+        "has_more": true
+    },
+    "performance": {
+        "total_time": 0.2,
+        "db_execution_time": 0.1,
+        "cache_hit": false,
+        "query_optimization": "index_scan"
+    }
   }
-}
-```
-
-### Errores Comunes
-- **Endpoint no encontrado**: 404 con lista de endpoints disponibles
-- **Error de base de datos**: 500 con detalles del error
-- **Parámetros inválidos**: 400 con descripción del problema
+  ```
 
 ---
 
-## 📈 Métricas de Performance
+### Obtener productos por tamaño
 
-### Tiempos Esperados
-- **Lista de categorías**: 0.001-1.7 segundos
-- **Productos Combos**: 0.1-0.3 segundos
-- **Filtros dinámicos**: 0.1-0.5 segundos
-- **Producto por ID/SKU**: 0.05-0.1 segundos
-- **Estadísticas**: 0.1-0.2 segundos
-
-### Factores de Optimización
-- **Caché Simple**: Respuestas instantáneas en consultas repetidas
-- **Índices MySQL**: Consultas optimizadas con EXPLAIN
-- **Connection pooling**: Gestión eficiente de conexiones
-- **Query optimization**: Uso de índices verificados
-
----
-
-## 🚀 Ejemplos de Uso Completo
-
-### Obtener Categorías para Frontend
-```javascript
-// Obtener categorías para el menú principal
-fetch('/api/v1/productos/categorias?limit=8')
-  .then(response => response.json())
-  .then(data => {
-    // Mostrar categorías en el menú
-    data.data.forEach(categoria => {
-      console.log(`${categoria.Categoria}: ${categoria.total_productos} productos`);
-    });
-  });
-```
-
-### Paginación de Productos
-```javascript
-// Primera página de combos
-fetch('/api/v1/productos/combos?limit=10&offset=0')
-  .then(response => response.json())
-  .then(data => {
-    console.log(`Mostrando ${data.data.length} de ${data.meta.total} productos`);
-    console.log(`¿Hay más? ${data.meta.has_more}`);
-  });
-```
-
-### Filtros Dinámicos
-```javascript
-// Obtener productos de una categoría específica
-fetch('/api/v1/productos/categorias/WHISKY?limit=20')
-  .then(response => response.json())
-  .then(data => {
-    data.data.forEach(producto => {
-      console.log(`${producto.Nombre}: S/ ${producto['Precio B']}`);
-    });
-  });
-```
+- **Método:** `GET`
+- **Ruta:** `/tamaño/<valor>`
+- **Descripción:** Obtiene productos de un tamaño específico.
+- **Parámetros de URL:**
+  - `valor` (string, requerido): El tamaño del producto (ej. "750ml").
+- **Parámetros de Query:**
+  - `limit` (integer, opcional): Número máximo de productos a devolver.
+  - `offset` (integer, opcional): Número de productos a omitir para la paginación.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "nombre": "Producto 1",
+            "sku": "SKU001",
+            "categoria": "Categoria A",
+            "sub_categoria": "Sub A",
+            "tamaño": "750ml",
+            "stock": "in stock"
+        }
+    ],
+    "meta": {
+        "tamaño": "750ml",
+        "total": 30,
+        "limit": 10,
+        "offset": 0,
+        "has_more": true
+    },
+    "performance": {
+        "total_time": 0.08,
+        "db_execution_time": 0.03,
+        "cache_hit": true,
+        "query_optimization": "index_scan"
+    }
+  }
+  ```
 
 ---
 
-## 🎯 Casos de Uso
+### Obtener producto por ID
 
-### **Frontend - Menú de Categorías**
-```bash
-curl "http://127.0.0.1:5001/api/v1/productos/categorias?limit=8"
-```
-
-### **Dashboard - Estadísticas**
-```bash
-curl "http://127.0.0.1:5001/api/v1/productos/estadisticas"
-```
-
-### **Búsqueda de Productos**
-```bash
-curl "http://127.0.0.1:5001/api/v1/productos/sku/11115.1"
-```
-
-### **Filtros por Disponibilidad**
-```bash
-curl "http://127.0.0.1:5001/api/v1/productos/stock/Con%20Stock?limit=10"
-```
+- **Método:** `GET`
+- **Ruta:** `/<producto_id>`
+- **Descripción:** Obtiene un producto específico por su ID.
+- **Parámetros de URL:**
+  - `producto_id` (integer, requerido): El ID del producto.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": 1,
+      "nombre": "Producto 1",
+      "sku": "SKU001",
+      "categoria": "Categoria A",
+      "sub_categoria": "Sub A",
+      "tamaño": "750ml",
+      "stock": "in stock"
+    },
+    "performance": {
+      "total_time": 0.04,
+      "db_execution_time": 0.01,
+      "cache_hit": true,
+      "query_optimization": "primary_key"
+    }
+  }
+  ```
+- **Respuesta de Error (404 Not Found):**
+  ```json
+  {
+    "success": false,
+    "error": "Producto no encontrado",
+    "performance": {
+      "total_time": 0.01
+    }
+  }
+  ```
 
 ---
 
-**Estado**: ✅ **API COMPLETA Y FUNCIONANDO**
-**Performance**: ⚡ **Ultra-rápido con caché**
-**Endpoints**: 9 endpoints principales
-**Optimización**: 98% más rápido con índices 
+### Obtener estadísticas de productos
+
+- **Método:** `GET`
+- **Ruta:** `/estadisticas`
+- **Descripción:** Obtiene estadísticas generales sobre los productos.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "total_productos": 500,
+      "productos_en_stock": 450,
+      "categorias_unicas": 15
+    },
+    "performance": {
+      "total_time": 0.3,
+      "db_execution_time": 0.2,
+      "cache_hit": false
+    }
+  }
+  ```
+
+---
+
+### Obtener productos de tipo "Combos"
+
+- **Método:** `GET`
+- **Ruta:** `/combos`
+- **Descripción:** Endpoint optimizado para obtener productos de la subcategoría "Combos".
+- **Parámetros de Query:**
+  - `limit` (integer, opcional): Número máximo de productos a devolver.
+  - `offset` (integer, opcional): Número de productos a omitir para la paginación.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+        {
+            "id": 10,
+            "nombre": "Combo Fiesta",
+            "sku": "SKU010",
+            "categoria": "Promociones",
+            "sub_categoria": "Combos",
+            "tamaño": "N/A",
+            "stock": "in stock"
+        }
+    ],
+    "meta": {
+        "subcategoria": "Combos",
+        "total": 20,
+        "limit": 10,
+        "offset": 0,
+        "has_more": true
+    },
+    "performance": {
+        "total_time": 0.15,
+        "db_execution_time": 0.07,
+        "cache_hit": false,
+        "query_optimization": "index_scan"
+    }
+  }
+  ```
+
+---
+
+### Obtener lista de categorías
+
+- **Método:** `GET`
+- **Ruta:** `/categorias`
+- **Descripción:** Obtiene una lista de todas las categorías de productos únicas.
+- **Parámetros de Query:**
+  - `limit` (integer, opcional, por defecto 10): Número máximo de categorías a devolver.
+- **Respuesta Exitosa (200 OK):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      "Categoria A",
+      "Categoria B",
+      "Promociones"
+    ],
+    "meta": {
+      "total": 3,
+      "limit": 10
+    },
+    "performance": {
+      "total_time": 0.09,
+      "db_execution_time": 0.04,
+      "cache_hit": true,
+      "query_optimization": "index_scan"
+    }
+  }
+  ```

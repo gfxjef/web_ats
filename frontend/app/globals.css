@@ -43,6 +43,46 @@
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    
+    /* Tokens específicos para Licorería ATS */
+    --liquor-orange: 25 95% 53%;
+    --liquor-orange-foreground: 0 0% 98%;
+    --liquor-amber: 45 93% 47%;
+    --liquor-amber-foreground: 0 0% 9%;
+    --liquor-purple: 259 94% 51%;
+    --liquor-purple-foreground: 0 0% 98%;
+    --liquor-gold: 51 91% 59%;
+    --liquor-gold-foreground: 0 0% 9%;
+    
+    /* Sistema de espaciado */
+    --spacing-xs: 0.25rem;
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+    --spacing-2xl: 3rem;
+    
+    /* Tipografía */
+    --font-size-xs: 0.75rem;
+    --font-size-sm: 0.875rem;
+    --font-size-base: 1rem;
+    --font-size-lg: 1.125rem;
+    --font-size-xl: 1.25rem;
+    --font-size-2xl: 1.5rem;
+    --font-size-3xl: 1.875rem;
+    
+    /* Radios específicos */
+    --radius-sm: 0.25rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-2xl: 1.5rem;
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1);
   }
   .dark {
     --background: 0 0% 3.9%;
