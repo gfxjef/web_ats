@@ -1,0 +1,15 @@
+# Ignorar archivos innecesarios para el build
+node_modules
+.next
+.git
+*.log
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.DS_Store
+*.tsbuildinfo
+coverage
+.nyc_output
+.storybook
+storybook-static

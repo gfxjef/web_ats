@@ -18,7 +18,7 @@ export function middleware(request: NextRequest) {
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' https://images.pexels.com data: blob:",
     "font-src 'self'",
-    "connect-src 'self' https://web-ats-backend.onrender.com http://localhost:5001 https://web-ats.vercel.app https://www.atusaludlicoreria.com",
+    "connect-src 'self' https://web-ats.onrender.com http://localhost:5001 https://web-ats.vercel.app https://www.atusaludlicoreria.com",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'"
