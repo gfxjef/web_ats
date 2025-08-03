@@ -22,8 +22,19 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     
-    # Configurar CORS
-    CORS(app, resources={r"/api/*": {"origins": "*"}})
+    # Configurar CORS para producción
+    CORS(app, resources={
+        r"/api/*": {
+            "origins": [
+                "https://web-ats.vercel.app",
+                "https://www.atusaludlicoreria.com",
+                "http://localhost:3000"  # Para desarrollo local
+            ],
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": ["Content-Type", "Authorization"],
+            "supports_credentials": True
+        }
+    })
     
     # Configurar caché Redis
     cache = Cache(app)

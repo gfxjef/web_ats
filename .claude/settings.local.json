@@ -15,7 +15,9 @@
       "Bash(find:*)",
       "Bash(mv:*)",
       "Bash(taskkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(npm install:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
