@@ -375,7 +375,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
               </div>
             ) : value.trim() ? (
               <div className="px-3 py-4 text-center text-sm text-gray-500">
-                No hay sugerencias para "{value}"
+                No hay sugerencias para &quot;{value}&quot;
               </div>
             ) : (
               <div className="px-3 py-4 text-center text-sm text-gray-500">
@@ -394,7 +394,7 @@ const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
                 {value.trim() && (
                   <div className="flex items-center space-x-1">
                     <ArrowUpRight className="w-3 h-3" />
-                    <span>Enter para buscar "{value}"</span>
+                    <span>Enter para buscar &quot;{value}&quot;</span>
                   </div>
                 )}
               </div>

@@ -731,7 +731,7 @@ export default function HomePage() {
                 </>
               ) : searchQuery.length >= 2 ? (
                 <div className="p-4 text-center text-gray-500">
-                  <p className="text-sm">No se encontraron productos para "{searchQuery}"</p>
+                  <p className="text-sm">No se encontraron productos para &quot;{searchQuery}&quot;</p>
                 </div>
               ) : null}
             </div>
@@ -785,7 +785,7 @@ export default function HomePage() {
             <div className="relative z-10">
               <h2 className="text-3xl font-bold mb-1">UP TO</h2>
               <h2 className="text-3xl font-bold mb-2">30% OFF*</h2>
-              <p className="text-sm mb-4 opacity-90">Don't Miss Out Order Today!</p>
+              <p className="text-sm mb-4 opacity-90">Don&apos;t Miss Out Order Today!</p>
               <Button className="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-6 py-2 rounded-full">
                 SHOP NOW
               </Button>
@@ -814,7 +814,7 @@ export default function HomePage() {
           <div className="min-w-[200px] bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-6 text-white relative overflow-hidden">
             <h2 className="text-2xl font-bold mb-2">UP TO</h2>
             <h2 className="text-2xl font-bold mb-2">35% OFF</h2>
-            <p className="text-sm mb-4 opacity-90">Don't...</p>
+            <p className="text-sm mb-4 opacity-90">Don&apos;t...</p>
             <Button className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-full text-sm">
               SHOP NOW
             </Button>

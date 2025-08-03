@@ -12,6 +12,8 @@ eggs/
 .eggs/
 lib/
 lib64/
+# Excepción para frontend/lib (Next.js utils)
+!frontend/lib/
 parts/
 sdist/
 var/
