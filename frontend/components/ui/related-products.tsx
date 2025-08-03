@@ -292,7 +292,7 @@ const RelatedProducts = React.forwardRef<HTMLDivElement, RelatedProductsProps>(
                       <Button
                         size="sm"
                         variant="liquorOrange"
-                        className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 z-10"
+                        className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full p-0 z-0"
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.Stock === 'Sin Stock'}
                       >
