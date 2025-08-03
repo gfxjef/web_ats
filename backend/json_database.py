@@ -43,8 +43,13 @@ class JSONDatabase:
     def load_from_mysql(self):
         """Cargar todos los datos desde MySQL"""
         try:
-            logger.info("🔄 Cargando datos completos desde MySQL...")
+            logger.info("🔄 Intentando cargar datos desde MySQL...")
             start_time = time.time()
+            
+            # En producción sin MySQL, usar datos de respaldo
+            if os.getenv('FLASK_ENV') == 'production' and not os.getenv('DB_HOST'):
+                logger.warning("⚠️ MySQL no configurado en producción, usando datos de respaldo")
+                return self._load_backup_data()
             
             conn = get_db_connection()
             cursor = conn.cursor(dictionary=True)
@@ -90,7 +95,11 @@ class JSONDatabase:
         """Cargar datos desde archivo JSON"""
         try:
             if not JSON_DB_FILE.exists():
-                logger.info("📂 Archivo de base de datos no existe, cargando desde MySQL...")
+                logger.info("📂 Archivo de base de datos no existe...")
+                # En producción, usar datos de respaldo si no hay MySQL
+                if os.getenv('FLASK_ENV') == 'production':
+                    logger.info("🔄 Usando datos de respaldo para producción")
+                    return self._load_backup_data()
                 return self.load_from_mysql()
             
             with open(JSON_DB_FILE, 'r', encoding='utf-8') as f:
@@ -107,7 +116,44 @@ class JSONDatabase:
             
         except Exception as e:
             logger.error(f"❌ Error cargando desde archivo: {e}")
+            # En producción, usar datos de respaldo
+            if os.getenv('FLASK_ENV') == 'production':
+                return self._load_backup_data()
             return self.load_from_mysql()
+    
+    def _load_backup_data(self):
+        """Cargar datos de respaldo para producción sin MySQL"""
+        logger.info("📦 Cargando datos de respaldo...")
+        
+        # Datos de ejemplo para producción
+        backup_products = [
+            {
+                'id': 1,
+                'SKU': 'DEMO001',
+                'Nombre': 'Producto Demo - Configure MySQL',
+                'Modelo': 'DEMO',
+                'Tamaño': '750ml',
+                'Categoria': 'DEMO',
+                'Sub Categoria': 'demo',
+                'Sub Categoria Nivel': '',
+                'Precio B': 0.00,
+                'Precio J': 0.00,
+                'Stock': 'Sin Stock',
+                'Product_asig': '',
+                'Cantidad': 0,
+                'Descripcion': 'Configure las variables de MySQL en Render para ver productos reales',
+                'Photo': ''
+            }
+        ]
+        
+        with db_lock:
+            self.data = backup_products
+            self.last_update = datetime.now()
+            self._build_indexes()
+            self._calculate_stats()
+        
+        logger.info("✅ Datos de respaldo cargados")
+        return True
     
     def _save_to_file(self):
         """Guardar datos en archivo JSON"""
