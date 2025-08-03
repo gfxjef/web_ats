@@ -8,7 +8,7 @@ const nextConfig = {
     ignoreBuildErrors: false, // Habilitar verificación de TypeScript
   },
   images: { 
-    domains: ['images.pexels.com'],
+    domains: ['images.pexels.com', 'i.ibb.co'],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60, // Cache de imágenes por 60 segundos
   },
