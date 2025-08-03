@@ -825,8 +825,10 @@ export default function HomePage() {
       {/* Recommended Section */}
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-xl font-bold text-gray-900">Recommended For You</h3>
-          <span className="text-gray-500 text-sm">See All</span>
+          <h3 className="text-xl font-bold text-gray-900">Recomendado para ti</h3>
+          <Link href="/categorias" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+            Ver más
+          </Link>
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
@@ -857,7 +859,7 @@ export default function HomePage() {
                 </Link>
                 <Button 
                   size="sm"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -889,7 +891,9 @@ export default function HomePage() {
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Combos para ti</h3>
-          <span className="text-gray-500 text-sm">See All</span>
+          <Link href="/categoria/LICORES" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+            Ver más
+          </Link>
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
@@ -926,7 +930,7 @@ export default function HomePage() {
                 </Link>
                 <Button 
                   size="sm"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
@@ -958,7 +962,9 @@ export default function HomePage() {
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Whiskies para ti</h3>
-          <span className="text-gray-500 text-sm">See All</span>
+          <Link href="/categoria/WHISKY" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+            Ver más
+          </Link>
         </div>
 
         <div className="flex space-x-4 overflow-x-auto pb-2">
@@ -995,7 +1001,7 @@ export default function HomePage() {
                 </Link>
                 <Button 
                   size="sm"
-                  className="absolute -bottom-2 -right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
