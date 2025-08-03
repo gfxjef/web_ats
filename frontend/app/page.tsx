@@ -177,6 +177,11 @@ export default function HomePage() {
   const [recommendedProducts, setRecommendedProducts] = useState<RecommendedProduct[]>([]);
   const [recommendedLoading, setRecommendedLoading] = useState(true);
   const [recommendedError, setRecommendedError] = useState<string | null>(null);
+
+  // Estado para cervezas
+  const [cervezas, setCervezas] = useState<WhiskyProduct[]>([]);
+  const [cervezasLoading, setCervezasLoading] = useState(true);
+  const [cervezasError, setCervezasError] = useState<string | null>(null);
   
   // Estados para búsqueda
   const [searchQuery, setSearchQuery] = useState('');
@@ -491,6 +496,67 @@ export default function HomePage() {
     }
   };
 
+  // Función optimizada para cargar cervezas
+  const loadCervezas = async () => {
+    try {
+      setCervezasLoading(true);
+      setCervezasError(null);
+
+      // Llamada al endpoint de cervezas con offset=15 para obtener diferentes cervezas
+      const startTime = performance.now();
+      const response = await fetch(getApiUrl('/api/v1/productos/categoria/CERVEZA?limit=10&offset=15'), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const endTime = performance.now();
+      console.log(`🍺 Cervezas cargadas en: ${(endTime - startTime).toFixed(2)}ms`);
+
+      if (!response.ok) {
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data: WhiskyApiResponse = await response.json();
+
+      if (data.success) {
+        setCervezas(data.data);
+        console.log(`⚡ Performance cervezas: ${data.performance.total_time}ms total, ${data.performance.db_execution_time}ms DB, Cache: ${data.performance.cache_hit}`);
+      } else {
+        throw new Error('Error en la respuesta de la API');
+      }
+    } catch (err) {
+      console.error('Error cargando cervezas:', err);
+      setCervezasError(err instanceof Error ? err.message : 'Error desconocido');
+      
+      // Fallback data para cervezas
+      setCervezas([
+        {
+          id: 999,
+          SKU: "CERVEZA-DEMO",
+          Nombre: "Cerveza Demo",
+          Modelo: "Premium",
+          Tamaño: "355ml",
+          'Precio B': 8,
+          'Precio J': 7,
+          Categoria: "CERVEZA",
+          'Sub Categoria': "Lager",
+          Stock: "Con Stock",
+          'Sub Categoria Nivel': "",
+          'Al Por Mayor': "",
+          Top_S_Sku: "",
+          Product_asig: "",
+          Descripcion: "Cerveza de demostración",
+          Cantidad: 12,
+          Photo: "https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"
+        }
+      ]);
+    } finally {
+      setCervezasLoading(false);
+    }
+  };
+
   // Cargar categorías primero (más importante) y luego el resto en paralelo
   useEffect(() => {
     const loadDataOptimized = async () => {
@@ -507,7 +573,8 @@ export default function HomePage() {
         await Promise.all([
           loadWhiskies(),
           loadCombos(),
-          loadRecommendedProducts()
+          loadRecommendedProducts(),
+          loadCervezas()
         ]);
         
         console.log('✅ Todo el contenido cargado exitosamente');
@@ -1029,6 +1096,76 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Cervezas para ti Section */}
+      <div className="px-4 pb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-xl font-bold text-gray-900">Cervezas para ti</h3>
+          <Link href="/categoria/CERVEZA" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+            Ver más
+          </Link>
+        </div>
+
+        <div className="flex space-x-4 overflow-x-auto pb-2">
+          {cervezasLoading ? (
+            <ProductRowSkeleton count={5} showPrice={true} />
+          ) : cervezasError ? (
+            <div className="flex items-center justify-center w-full py-4">
+              <p className="text-red-500 text-sm">Error cargando cervezas: {cervezasError}</p>
+            </div>
+          ) : (
+            cervezas.map((cerveza) => (
+              <div key={cerveza.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
+                <Link href={`/product/${cerveza.id}`} className="block">
+                  <div className="relative mb-3">
+                    <div className="w-full h-40 bg-gradient-to-br from-yellow-50 to-yellow-100 rounded-xl overflow-hidden">
+                      <Image 
+                        src={cerveza.Photo || "https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg?auto=compress&cs=tinysrgb&w=300&h=400&fit=crop"}
+                        alt={cerveza.Nombre}
+                        width={160}
+                        height={160}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                  <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{cerveza.Nombre}</h4>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">{cerveza.Tamaño}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-lg font-bold text-gray-900">S/{cerveza['Precio B']}</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
+                      <span className="text-xs text-yellow-600 font-medium">Fresca</span>
+                    </div>
+                  </div>
+                </Link>
+                <Button 
+                  size="sm"
+                  className="absolute bottom-2 right-2 w-8 h-8 rounded-full bg-orange-500 hover:bg-orange-600 p-0 z-10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    addItem({
+                      id: cerveza.id,
+                      SKU: cerveza.SKU,
+                      Nombre: cerveza.Nombre,
+                      Modelo: cerveza.Modelo,
+                      Tamaño: cerveza.Tamaño,
+                      'Precio B': cerveza['Precio B'],
+                      'Precio J': cerveza['Precio J'],
+                      Categoria: cerveza.Categoria,
+                      'Sub Categoria': cerveza['Sub Categoria'],
+                      Stock: cerveza.Stock,
+                      Photo: cerveza.Photo,
+                    }, 1);
+                    toast.productAdded(cerveza.Nombre, 1, cerveza['Precio B']);
+                  }}
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
 
       {/* Bottom padding to account for fixed navigation */}
       <div className="h-24"></div>
