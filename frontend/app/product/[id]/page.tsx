@@ -373,7 +373,7 @@ export default function ProductDetailPage() {
           </h1>
 
           {/* Price and Stock */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between -mt-2">
             <div className="flex items-center space-x-2">
               <span className="text-2xl font-bold text-gray-900">
                 S/{product['Precio B']}
@@ -395,10 +395,6 @@ export default function ProductDetailPage() {
 
           {/* Product Details */}
           <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">SKU:</span>
-              <span className="font-medium">{product.SKU}</span>
-            </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-600">Tamaño:</span>
               <span className="font-medium">{product.Tamaño}</span>
@@ -467,7 +463,7 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Bottom Section with Quantity and Add to Cart */}
-      <div className="fixed bottom-20 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-10 shadow-lg">
+      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-10 shadow-lg">
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between space-x-4">
             {/* Quantity Selector */}

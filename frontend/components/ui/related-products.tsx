@@ -7,7 +7,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductGridSkeleton } from "@/components/ui/product-card-skeleton";
-import { RefreshCw, ShoppingCart, Eye, Heart, ArrowRight, Star } from "lucide-react";
+import { RefreshCw, Plus, Eye, Heart, ArrowRight, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRelatedProducts, type RelatedProduct } from "@/hooks/use-related-products";
 import { useLiquorToast } from "@/hooks/use-liquor-toast";
@@ -296,7 +296,7 @@ const RelatedProducts = React.forwardRef<HTMLDivElement, RelatedProductsProps>(
                         onClick={(e) => handleAddToCart(product, e)}
                         disabled={product.Stock === 'Sin Stock'}
                       >
-                        <ShoppingCart className="w-4 h-4" />
+                        <Plus className="w-4 h-4" />
                       </Button>
                     )}
                   </div>
