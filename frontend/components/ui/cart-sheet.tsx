@@ -66,8 +66,9 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
     // Cargar productos sugeridos cuando se abre el carrito
     useEffect(() => {
       if (isOpen && hasItems) {
-        // Obtener categorías únicas del carrito
-        const categories = [...new Set(items.map(item => item.Categoria))];
+        // Obtener categorías únicas del carrito (compatible con versiones anteriores de TS)
+        const categoriesSet = new Set(items.map(item => item.Categoria));
+        const categories = Array.from(categoriesSet);
         
         // Por ahora, usar productos de ejemplo (en producción esto vendría de la API)
         const mockSuggestions: SuggestedProduct[] = [
