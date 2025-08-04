@@ -155,10 +155,7 @@ const getApiUrl = (endpoint: string): string => {
   return `${baseUrl}${endpoint}`;
 };
 
-// Caché local para categorías
-let categoriesCache: Category[] | null = null;
-let cacheTimestamp: number = 0;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutos
+// Caché eliminado - causaba problemas en producción
 
 export default function HomePage() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -197,30 +194,21 @@ export default function HomePage() {
   // Estado global de loading para optimizar UX
   const [globalLoading, setGlobalLoading] = useState(true);
 
-  // Función optimizada para cargar categorías
+  // Función para cargar categorías
   const loadCategories = async () => {
     try {
-      // Verificar caché local
-      const now = Date.now();
-      if (categoriesCache && (now - cacheTimestamp) < CACHE_DURATION) {
-        setCategories(categoriesCache);
-        setLoading(false);
-        return;
-      }
-
       setLoading(true);
       setError(null);
 
-      // Llamada al endpoint optimizada
+      // Llamada al endpoint sin caché problemático
       const startTime = performance.now();
       const response = await fetch(getApiUrl('/api/v1/productos/categorias?limit=10'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        // Optimizaciones para velocidad
-        cache: 'default',
-        keepalive: true,
+        // Sin caché para evitar problemas en producción
+        cache: 'no-store',
       });
 
       const endTime = performance.now();
@@ -233,10 +221,6 @@ export default function HomePage() {
       const data: ApiResponse = await response.json();
       
       if (data.success) {
-        // Actualizar caché local
-        categoriesCache = data.data;
-        cacheTimestamp = now;
-        
         setCategories(data.data);
         console.log(`⚡ Performance: ${data.performance.total_time}ms total, ${data.performance.db_execution_time}ms DB, Cache: ${data.performance.cache_hit}`);
       } else {
