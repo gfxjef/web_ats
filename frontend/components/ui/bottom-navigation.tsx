@@ -89,14 +89,14 @@ export function BottomNavigation() {
           className="flex flex-col items-center space-y-1 relative"
         >
           <div className="relative">
-            <ShoppingCart className={`w-6 h-6 ${activeTab === 'cart' ? 'text-gray-900' : 'text-gray-400'}`} />
+            <ShoppingCart className="w-6 h-6 text-gray-400" />
             {summary.itemCount > 0 && (
               <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-medium">
                 {summary.itemCount > 99 ? '99+' : summary.itemCount}
               </span>
             )}
           </div>
-          <span className={`text-xs ${activeTab === 'cart' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Cart</span>
+          <span className="text-xs text-gray-400">Cart</span>
         </button>
       </div>
     </div>
