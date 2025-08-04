@@ -48,86 +48,88 @@ class JSONDatabase:
             
             # En producción sin MySQL, usar datos de respaldo
             if os.getenv('FLASK_ENV') == 'production' and not os.getenv('DB_HOST'):
-                logger.warning("⚠️ No hay configuración MySQL en producción, usando datos de respaldo")
+                logger.warning("⚠️ MySQL no configurado en producción, usando datos de respaldo")
                 return self._load_backup_data()
             
-            connection = get_db_connection()
-            if not connection:
-                logger.warning("⚠️ No se pudo conectar a MySQL, usando datos de respaldo")
-                return self._load_backup_data()
+            conn = get_db_connection()
+            cursor = conn.cursor(dictionary=True)
             
-            cursor = connection.cursor(dictionary=True)
-            
-            # Query optimizado para obtener todos los productos
-            query = """
-            SELECT 
-                id, SKU, Nombre, Modelo, Tamaño, 
-                `Precio B`, `Precio J`, Categoria, `Sub Categoria`, 
-                Stock, `Sub Categoria Nivel`, `Al Por Mayor`, 
-                Top_S_Sku, Product_asig, Descripcion, Cantidad, Photo
-            FROM productos 
-            ORDER BY id
-            """
-            
-            cursor.execute(query)
+            # Obtener TODOS los productos
+            cursor.execute("SELECT * FROM productos ORDER BY id")
             products = cursor.fetchall()
             
-            # Procesar datos
-            processed_products = []
+            # Convertir valores None a cadenas vacías y limpiar datos
+            cleaned_products = []
             for product in products:
-                # Convertir None a valores por defecto
-                processed_product = {
-                    'id': product.get('id', 0),
-                    'SKU': product.get('SKU', ''),
-                    'Nombre': product.get('Nombre', ''),
-                    'Modelo': product.get('Modelo', ''),
-                    'Tamaño': product.get('Tamaño', ''),
-                    'Precio B': float(product.get('Precio B', 0)),
-                    'Precio J': float(product.get('Precio J', 0)),
-                    'Categoria': product.get('Categoria', ''),
-                    'Sub Categoria': product.get('Sub Categoria', ''),
-                    'Stock': product.get('Stock', 'Sin Stock'),
-                    'Sub Categoria Nivel': str(product.get('Sub Categoria Nivel', '999')),
-                    'Al Por Mayor': product.get('Al Por Mayor', 'No'),
-                    'Top_S_Sku': product.get('Top_S_Sku', ''),
-                    'Product_asig': product.get('Product_asig', ''),
-                    'Descripcion': product.get('Descripcion', ''),
-                    'Cantidad': int(product.get('Cantidad', 0)),
-                    'Photo': product.get('Photo', '')
-                }
-                processed_products.append(processed_product)
+                cleaned_product = {}
+                for key, value in product.items():
+                    if value is None:
+                        cleaned_product[key] = ""
+                    elif isinstance(value, (int, float)):
+                        cleaned_product[key] = value
+                    else:
+                        cleaned_product[key] = str(value).strip()
+                cleaned_products.append(cleaned_product)
             
-            cursor.close()
-            close_db_connection(connection)
-            
-            # Actualizar datos en memoria
             with db_lock:
-                self.data = processed_products
+                self.data = cleaned_products
                 self.last_update = datetime.now()
                 self._build_indexes()
                 self._calculate_stats()
             
-            # Guardar en archivo
-            self._save_to_file()
+            close_db_connection(conn)
             
             load_time = time.time() - start_time
-            logger.info(f"✅ {len(processed_products)} productos cargados desde MySQL en {load_time:.2f}s")
+            logger.info(f"✅ Datos cargados: {len(self.data)} productos en {load_time:.2f}s")
+            
+            # Guardar en archivo JSON
+            self._save_to_file()
             
             return True
             
         except Exception as e:
             logger.error(f"❌ Error cargando desde MySQL: {e}")
-            # Fallback a datos de respaldo
-            return self._load_backup_data()
+            return False
+    
+    def load_from_file(self):
+        """Cargar datos desde archivo JSON"""
+        try:
+            if not JSON_DB_FILE.exists():
+                logger.info("📂 Archivo de base de datos no existe...")
+                # En producción, usar datos de respaldo si no hay MySQL
+                if os.getenv('FLASK_ENV') == 'production':
+                    logger.info("🔄 Usando datos de respaldo para producción")
+                    return self._load_backup_data()
+                return self.load_from_mysql()
+            
+            with open(JSON_DB_FILE, 'r', encoding='utf-8') as f:
+                file_data = json.load(f)
+            
+            with db_lock:
+                self.data = file_data.get('products', [])
+                self.last_update = datetime.fromisoformat(file_data.get('last_update', datetime.now().isoformat()))
+                self._build_indexes()
+                self._calculate_stats()
+            
+            logger.info(f"📚 Datos cargados desde archivo: {len(self.data)} productos")
+            return True
+            
+        except Exception as e:
+            logger.error(f"❌ Error cargando desde archivo: {e}")
+            # En producción, usar datos de respaldo
+            if os.getenv('FLASK_ENV') == 'production':
+                return self._load_backup_data()
+            return self.load_from_mysql()
     
     def _load_backup_data(self):
-        """Cargar datos de respaldo cuando MySQL no está disponible"""
+        """Cargar datos de respaldo para producción sin MySQL"""
         logger.info("📦 Cargando datos de respaldo...")
         
+        # Datos de ejemplo para producción
         backup_products = [
             {
                 'id': 1,
-                'SKU': 'DEMO-001',
+                'SKU': 'DEMO001',
                 'Nombre': 'Producto Demo - Configure MySQL',
                 'Modelo': 'DEMO',
                 'Tamaño': '750ml',
@@ -306,23 +308,19 @@ class JSONDatabase:
         self.stats['last_query_time'] = time.time() - start_time
         return result
     
-    def search_products(self, query: str, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
-        """Búsqueda optimizada por nombre"""
+    def search_by_name(self, query: str, limit: Optional[int] = None) -> List[Dict]:
+        """SELECT * FROM productos WHERE Nombre LIKE '%query%'"""
         start_time = time.time()
         
+        query = query.lower()
+        results = []
+        
         with db_lock:
-            results = []
-            query_lower = query.lower()
-            
             for product in self.data:
-                if (query_lower in product['Nombre'].lower() or 
-                    query_lower in product['Modelo'].lower() or
-                    query_lower in product['Categoria'].lower() or
-                    query_lower in product['Sub Categoria'].lower()):
+                if query in product['Nombre'].lower():
                     results.append(product)
-                    
-                if limit and len(results) >= limit + offset:
-                    break
+                    if limit and len(results) >= limit:
+                        break
         
         self.stats['last_query_time'] = time.time() - start_time
         return results
@@ -366,21 +364,18 @@ class JSONDatabase:
         start_time = time.time()
         
         with db_lock:
-            available_products = self.indexes['by_stock'].get('Con Stock', [])
-            if available_products:
-                shuffled = available_products.copy()
-                random.shuffle(shuffled)
-                result = shuffled[:limit]
+            stock_products = self.indexes['by_stock'].get('Con Stock', [])
+            if len(stock_products) <= limit:
+                result = stock_products.copy()
             else:
-                result = []
+                result = random.sample(stock_products, limit)
         
         self.stats['last_query_time'] = time.time() - start_time
         return result
     
     def count_total(self) -> int:
         """SELECT COUNT(*) FROM productos"""
-        with db_lock:
-            return len(self.data)
+        return len(self.data)
     
     def count_by_categoria(self, categoria: str) -> int:
         """SELECT COUNT(*) FROM productos WHERE Categoria = ?"""
@@ -398,84 +393,64 @@ class JSONDatabase:
             'total_products': self.stats['total_products'],
             'categories_count': len(self.stats['categories']),
             'last_update': self.last_update.isoformat() if self.last_update else None,
-            'last_query_time': self.stats['last_query_time'],
-            'indexes_built': len(self.indexes) > 0
+            'last_query_time_ms': self.stats['last_query_time'] * 1000,
+            'file_size_mb': JSON_DB_FILE.stat().st_size / 1024 / 1024 if JSON_DB_FILE.exists() else 0,
+            'indexes_built': len(self.indexes)
         }
 
 # Instancia global
 json_db = JSONDatabase()
 
-def init_database():
-    """Inicializar la base de datos JSON"""
-    logger.info("🚀 Inicializando JSONDatabase...")
+def update_database_periodically():
+    """Actualizar la base de datos periódicamente"""
+    schedule.every(UPDATE_INTERVAL).minutes.do(json_db.load_from_mysql)
     
-    # Cargar datos iniciales
-    json_db.load_from_mysql()
+    # Carga inicial
+    json_db.load_from_file()
     
-    # Programar actualizaciones automáticas (comentado para desarrollo)
-    # def update_database():
-    #     logger.info("⏰ Actualizando base de datos JSON...")
-    #     json_db.load_from_mysql()
-    
-    # schedule.every(UPDATE_INTERVAL).minutes.do(update_database)
-    
-    # def run_scheduler():
-    #     while True:
-    #         schedule.run_pending()
-    #         time.sleep(1)
-    
-    # scheduler_thread = Thread(target=run_scheduler, daemon=True)
-    # scheduler_thread.start()
-    
-    logger.info("✅ JSONDatabase inicializada correctamente")
+    while True:
+        schedule.run_pending()
+        time.sleep(60)  # Verificar cada minuto
 
 def start_json_database():
     """Iniciar el sistema de base de datos JSON"""
-    # Cargar datos iniciales desde archivo o MySQL
-    if JSON_DB_FILE.exists():
-        logger.info("📂 Archivo de base de datos encontrado, cargando...")
-        json_db.load_from_file()
-    else:
-        logger.info("📂 No hay archivo de BD, cargando desde MySQL...")
-        json_db.load_from_mysql()
+    # Cargar datos iniciales
+    json_db.load_from_file()
     
-    # Iniciar actualizador en background (comentado para desarrollo)
-    # def update_database_periodically():
-    #     schedule.every(UPDATE_INTERVAL).minutes.do(json_db.load_from_mysql)
-    #     while True:
-    #         schedule.run_pending()
-    #         time.sleep(60)
-    
-    # updater_thread = Thread(target=update_database_periodically, daemon=True)
-    # updater_thread.start()
+    # Iniciar actualizador en background
+    updater_thread = Thread(target=update_database_periodically, daemon=True)
+    updater_thread.start()
     
     logger.info(f"🚀 Base de datos JSON iniciada con {json_db.count_total()} productos")
 
-def load_from_file(self):
-    """Cargar datos desde archivo JSON"""
-    try:
-        if not JSON_DB_FILE.exists():
-            logger.info("📂 Archivo de base de datos no existe...")
-            return self.load_from_mysql()
-        
-        with open(JSON_DB_FILE, 'r', encoding='utf-8') as f:
-            file_data = json.load(f)
-        
-        with db_lock:
-            self.data = file_data.get('products', [])
-            self.last_update = datetime.fromisoformat(file_data.get('last_update', datetime.now().isoformat()))
-            self._build_indexes()
-            self._calculate_stats()
-        
-        logger.info(f"📚 Datos cargados desde archivo: {len(self.data)} productos")
-        return True
-        
-    except Exception as e:
-        logger.error(f"❌ Error cargando desde archivo: {e}")
-        return self.load_from_mysql()
-
-# Agregar método load_from_file a la clase JSONDatabase
-JSONDatabase.load_from_file = load_from_file
-
 if __name__ == "__main__":
-    init_database()
+    # Ejemplo de uso
+    print("Iniciando base de datos JSON...")
+    
+    # Cargar datos
+    json_db.load_from_mysql()
+    
+    # Ejemplos de consultas
+    print(f"\n📊 Total productos: {json_db.count_total()}")
+    
+    print(f"\n🍺 Productos de CERVEZA: {json_db.count_by_categoria('CERVEZA')}")
+    cervezas = json_db.get_by_categoria('CERVEZA', limit=3)
+    for cerveza in cervezas:
+        print(f"  - {cerveza['Nombre']} ({cerveza['Tamaño']})")
+    
+    print(f"\n🔍 Búsqueda 'Pilsen':")
+    pilsen_products = json_db.search_by_name('Pilsen', limit=3)
+    for product in pilsen_products:
+        print(f"  - {product['Nombre']} - ₹{product['Precio B']}")
+    
+    print(f"\n⭐ Productos destacados:")
+    featured = json_db.get_featured_products(5)
+    for product in featured:
+        print(f"  - {product['Nombre']} ({product['Categoria']})")
+    
+    print(f"\n📈 Estadísticas:")
+    stats = json_db.get_database_stats()
+    print(f"  - Total productos: {stats['total_products']}")
+    print(f"  - Categorías: {stats['categories_count']}")
+    print(f"  - Tamaño archivo: {stats['file_size_mb']:.2f} MB")
+    print(f"  - Última consulta: {stats['last_query_time_ms']:.2f} ms")

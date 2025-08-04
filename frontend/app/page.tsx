@@ -7,14 +7,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ProductRowSkeleton } from "@/components/ui/product-card-skeleton";
 import { useLiquorToast } from "@/hooks/use-liquor-toast";
 import { useCartContext } from "@/contexts/cart-context";
+import { useAnalytics } from "@/hooks/use-analytics";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useMemo, useCallback } from "react";
 
 // Tipos para las categorías
 interface Category {
-  Categoria: string;
+  Categoria: string; // Para URLs (compatibilidad)
+  Sub_Categoria: string; // Nombre a mostrar
+  Sub_Categoria_Nivel: string; // Para ordenamiento
   total_productos: number;
+  productos_con_stock?: number;
 }
 
 // Tipos para productos de whisky
@@ -162,6 +166,7 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const toast = useLiquorToast();
   const { addItem } = useCartContext();
+  const { trackAddToCart, trackSearch } = useAnalytics();
   
   // Estado para whiskies
   const [whiskies, setWhiskies] = useState<WhiskyProduct[]>([]);
@@ -242,11 +247,11 @@ export default function HomePage() {
       setError(err instanceof Error ? err.message : 'Error desconocido');
       // Fallback a categorías estáticas en caso de error
       setCategories([
-        { Categoria: "CERVEZA", total_productos: 153 },
-        { Categoria: "WHISKY", total_productos: 78 },
-        { Categoria: "TRAGOS", total_productos: 76 },
-        { Categoria: "VODKA", total_productos: 74 },
-        { Categoria: "PISCO", total_productos: 67 }
+        { Categoria: "CERVEZA", Sub_Categoria: "Cervezas", Sub_Categoria_Nivel: "1", total_productos: 153, productos_con_stock: 153 },
+        { Categoria: "WHISKY", Sub_Categoria: "Whiskies", Sub_Categoria_Nivel: "2", total_productos: 78, productos_con_stock: 78 },
+        { Categoria: "TRAGOS", Sub_Categoria: "Tragos", Sub_Categoria_Nivel: "3", total_productos: 76, productos_con_stock: 76 },
+        { Categoria: "VODKA", Sub_Categoria: "Vodkas", Sub_Categoria_Nivel: "4", total_productos: 74, productos_con_stock: 74 },
+        { Categoria: "PISCO", Sub_Categoria: "Piscos", Sub_Categoria_Nivel: "5", total_productos: 67, productos_con_stock: 67 }
       ]);
     } finally {
       setLoading(false);
@@ -261,7 +266,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de whiskies
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/categoria/WHISKY?limit=5'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Whiskies'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -342,7 +347,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de combos con offset=5 para obtener diferentes combos
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Combos?limit=10&offset=5'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Combos'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -423,7 +428,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de piscos con offset=10 para obtener diferentes productos
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Piscos?limit=10&offset=10'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Piscos'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -504,7 +509,7 @@ export default function HomePage() {
 
       // Llamada al endpoint de cervezas con offset=15 para obtener diferentes cervezas
       const startTime = performance.now();
-      const response = await fetch(getApiUrl('/api/v1/productos/categoria/CERVEZA?limit=10&offset=15'), {
+      const response = await fetch(getApiUrl('/api/v1/productos/subcategoria/Cervezas'), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -666,6 +671,7 @@ export default function HomePage() {
     }
 
     setSearchLoading(true);
+    trackSearch(query); // Track búsqueda en GA
     
     try {
       const response = await fetch(getApiUrl(`/api/v1/productos/buscar/${encodeURIComponent(query)}?limit=10`), {
@@ -725,15 +731,14 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-          <div>
-            <div className="flex items-center space-x-1">
-              <span className="font-semibold text-lg">Home</span>
-              <ChevronDown className="w-4 h-4" />
-            </div>
-            <p className="text-sm text-gray-600">C-56/23, Sector 62, Noida</p>
-          </div>
+        <div className="flex items-center">
+          <Image 
+            src="https://i.ibb.co/r2KwkMSR/ats-logo-azul.webp"
+            alt="ATS Logo"
+            width={100}
+            height={40}
+            className="object-contain"
+          />
         </div>
         
         <div className="flex items-center space-x-3">
@@ -822,22 +827,25 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error: {error}</p>
             </div>
           ) : (
-            categories.slice(0, 10).map((category, index) => (
+            categories
+              .filter(category => (category.productos_con_stock ?? 0) > 0) // Filtrar categorías sin stock
+              .slice(0, 10) // Ya vienen ordenadas por Sub_Categoria_Nivel del backend
+              .map((category, index) => (
               <Link 
                 key={index} 
-                href={`/categoria/${encodeURIComponent(category.Categoria)}`}
+                href={`/categoria/${encodeURIComponent(category.Sub_Categoria)}`}
                 className="flex flex-col items-center space-y-2 min-w-[80px] cursor-pointer hover:opacity-80 transition-opacity"
               >
-                <div className={`w-16 h-16 ${getCategoryStyle(category.Categoria).bgColor} rounded-2xl flex items-center justify-center overflow-hidden`}>
+                <div className={`w-16 h-16 ${getCategoryStyle(category.Sub_Categoria).bgColor} rounded-2xl flex items-center justify-center overflow-hidden`}>
                   <Image 
-                    src={getCategoryStyle(category.Categoria).image}
-                    alt={category.Categoria}
+                    src={getCategoryStyle(category.Sub_Categoria).image}
+                    alt={category.Sub_Categoria}
                     width={40}
                     height={40}
                     className="object-cover rounded-lg"
                   />
                 </div>
-                <span className="text-sm font-medium text-gray-800">{formatCategoryName(category.Categoria)}</span>
+                <span className="text-sm font-medium text-gray-800">{formatCategoryName(category.Sub_Categoria)}</span>
               </Link>
             ))
           )}
@@ -906,7 +914,10 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error cargando recomendados: {recommendedError}</p>
             </div>
           ) : (
-            recommendedProducts.map((product) => (
+            recommendedProducts
+              .filter(product => product['Precio B'] > 10) // Filtrar productos >S/10
+              .slice(0, 10) // Garantizar máximo 10 productos
+              .map((product) => (
               <div key={product.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
                 <Link href={`/product/${product.id}`} className="block">
                   <div className="relative mb-3">
@@ -944,6 +955,7 @@ export default function HomePage() {
                       Photo: product.Photo,
                     }, 1);
                     toast.productAdded(product.Nombre, 1, product['Precio B']);
+                    trackAddToCart(product.id, product.Nombre, product['Precio B'], 1);
                   }}
                 >
                   <Plus className="w-4 h-4" />
@@ -958,7 +970,7 @@ export default function HomePage() {
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Combos para ti</h3>
-          <Link href="/categoria/LICORES" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+          <Link href="/categoria/Combos" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
             Ver más
           </Link>
         </div>
@@ -971,7 +983,10 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error cargando combos: {combosError}</p>
             </div>
           ) : (
-            combos.map((combo) => (
+            combos
+              .filter(combo => combo['Precio B'] > 10) // Filtrar combos >S/10
+              .slice(0, 10) // Garantizar máximo 10 combos
+              .map((combo) => (
               <div key={combo.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
                 <Link href={`/product/${combo.id}`} className="block">
                   <div className="relative mb-3">
@@ -1015,6 +1030,7 @@ export default function HomePage() {
                       Photo: combo.Photo,
                     }, 1);
                     toast.productAdded(combo.Nombre, 1, combo['Precio B']);
+                    trackAddToCart(combo.id, combo.Nombre, combo['Precio B'], 1);
                   }}
                 >
                   <Plus className="w-4 h-4" />
@@ -1029,7 +1045,7 @@ export default function HomePage() {
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Whiskies para ti</h3>
-          <Link href="/categoria/WHISKY" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+          <Link href="/categoria/Whiskies" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
             Ver más
           </Link>
         </div>
@@ -1042,7 +1058,10 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error cargando whiskies: {whiskiesError}</p>
             </div>
           ) : (
-            whiskies.map((whisky) => (
+            whiskies
+              .filter(whisky => whisky['Precio B'] > 10) // Filtrar whiskies >S/10
+              .slice(0, 10) // Garantizar máximo 10 whiskies
+              .map((whisky) => (
               <div key={whisky.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
                 <Link href={`/product/${whisky.id}`} className="block">
                   <div className="relative mb-3">
@@ -1086,6 +1105,7 @@ export default function HomePage() {
                       Photo: whisky.Photo,
                     }, 1);
                     toast.productAdded(whisky.Nombre, 1, whisky['Precio B']);
+                    trackAddToCart(whisky.id, whisky.Nombre, whisky['Precio B'], 1);
                   }}
                 >
                   <Plus className="w-4 h-4" />
@@ -1100,7 +1120,7 @@ export default function HomePage() {
       <div className="px-4 pb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-xl font-bold text-gray-900">Cervezas para ti</h3>
-          <Link href="/categoria/CERVEZA" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
+          <Link href="/categoria/Cervezas" className="text-gray-500 text-sm hover:text-orange-500 transition-colors">
             Ver más
           </Link>
         </div>
@@ -1113,7 +1133,10 @@ export default function HomePage() {
               <p className="text-red-500 text-sm">Error cargando cervezas: {cervezasError}</p>
             </div>
           ) : (
-            cervezas.map((cerveza) => (
+            cervezas
+              .filter(cerveza => cerveza['Precio B'] > 10) // Filtrar cervezas >S/10
+              .slice(0, 10) // Garantizar máximo 10 cervezas
+              .map((cerveza) => (
               <div key={cerveza.id} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 w-[160px] flex-shrink-0 relative">
                 <Link href={`/product/${cerveza.id}`} className="block">
                   <div className="relative mb-3">
@@ -1157,6 +1180,7 @@ export default function HomePage() {
                       Photo: cerveza.Photo,
                     }, 1);
                     toast.productAdded(cerveza.Nombre, 1, cerveza['Precio B']);
+                    trackAddToCart(cerveza.id, cerveza.Nombre, cerveza['Precio B'], 1);
                   }}
                 >
                   <Plus className="w-4 h-4" />

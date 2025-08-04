@@ -20,6 +20,13 @@ export interface LiquorToastOptions {
 
 // Hook personalizado para toasts de licorería
 export function useLiquorToast() {
+  // Importamos useCartContext dinámicamente para evitar problemas de dependencias circulares
+  const openCart = () => {
+    const cartButton = document.querySelector('[data-cart-trigger]') as HTMLButtonElement;
+    if (cartButton) {
+      cartButton.click();
+    }
+  };
   
   const showToast = (type: ToastType, options: LiquorToastOptions) => {
     const { title, description, duration = 4000, action, productName, productPrice, quantity } = options;
@@ -80,8 +87,7 @@ export function useLiquorToast() {
           } : {
             label: 'Ver Carrito',
             onClick: () => {
-              // Navegar al carrito - implementar según tu routing
-              console.log('Navegando al carrito...');
+              openCart();
             },
           },
         });

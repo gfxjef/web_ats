@@ -53,7 +53,7 @@ export function BottomNavigation() {
           className="flex flex-col items-center space-y-1"
         >
           <Home className={`w-6 h-6 ${activeTab === 'home' ? 'text-gray-900' : 'text-gray-400'}`} />
-          <span className={`text-xs ${activeTab === 'home' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Home</span>
+          <span className={`text-xs ${activeTab === 'home' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Inicio</span>
         </button>
         
         {/* Categories */}
@@ -87,6 +87,7 @@ export function BottomNavigation() {
         <button 
           onClick={() => handleNavigation('cart')}
           className="flex flex-col items-center space-y-1 relative"
+          data-cart-trigger
         >
           <div className="relative">
             <ShoppingCart className="w-6 h-6 text-gray-400" />

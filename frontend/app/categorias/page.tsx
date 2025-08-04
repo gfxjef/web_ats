@@ -10,8 +10,11 @@ import Link from "next/link";
 
 // Tipos para las categorías
 interface Category {
-  Categoria: string;
+  Categoria: string; // Para URLs (compatibilidad)
+  Sub_Categoria: string; // Nombre a mostrar
+  Sub_Categoria_Nivel: string; // Para ordenamiento
   total_productos: number;
+  productos_con_stock?: number;
 }
 
 // Función utilitaria para obtener la URL base de la API
@@ -59,10 +62,12 @@ export default function CategoriasPage() {
     loadCategories();
   }, []);
 
-  // Filtrar categorías basado en búsqueda
-  const filteredCategories = categories.filter(category =>
-    category.Categoria.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Filtrar categorías basado en búsqueda y stock (ya vienen ordenadas por Sub_Categoria_Nivel)
+  const filteredCategories = categories
+    .filter(category =>
+      category.Sub_Categoria.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      (category.productos_con_stock === undefined || category.productos_con_stock > 0)
+    );
 
   // Mapeo de colores y imágenes por categoría
   const getCategoryStyle = (categoryName: string) => {
@@ -186,25 +191,25 @@ export default function CategoriasPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredCategories.map((category, index) => {
-              const style = getCategoryStyle(category.Categoria);
+              const style = getCategoryStyle(category.Sub_Categoria);
               return (
                 <Link 
                   key={index} 
-                  href={`/categoria/${encodeURIComponent(category.Categoria)}`}
+                  href={`/categoria/${encodeURIComponent(category.Sub_Categoria)}`}
                   className="group"
                 >
                   <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 group-hover:border-orange-500/50 text-center">
                     <div className={`w-16 h-16 ${style.bgColor} rounded-2xl flex items-center justify-center mx-auto mb-4 overflow-hidden`}>
                       <Image 
                         src={style.image}
-                        alt={category.Categoria}
+                        alt={category.Sub_Categoria}
                         width={40}
                         height={40}
                         className="object-cover rounded-lg"
                       />
                     </div>
                     <h3 className="font-semibold text-gray-900 text-sm mb-1 line-clamp-1">
-                      {formatCategoryName(category.Categoria)}
+                      {formatCategoryName(category.Sub_Categoria)}
                     </h3>
                     <p className="text-xs text-gray-500">
                       {category.total_productos} productos

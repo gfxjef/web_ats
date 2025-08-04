@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import { Toaster } from '@/components/ui/sonner';
 import { CartProvider } from '@/contexts/cart-context';
 import { BottomNavigation } from '@/components/ui/bottom-navigation';
+import { GoogleAnalytics } from '@/components/GoogleAnalytics';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -37,6 +38,10 @@ export default function RootLayout({
             }}
           />
         </CartProvider>
+        {/* Google Analytics - Reemplazar GA_MEASUREMENT_ID con tu ID real */}
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   );

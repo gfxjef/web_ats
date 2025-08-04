@@ -98,7 +98,7 @@ export default function CategoriaPage() {
   // Función de fetch para el hook de paginación
   const fetchProducts = useCallback(async (offset: number, limit: number) => {
     const response = await fetch(
-      getApiUrl(`/api/v1/productos/categoria/${encodeURIComponent(categoria)}?limit=${limit}&offset=${offset}`),
+      getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(categoria)}?limit=${limit}&offset=${offset}`),
       {
         method: 'GET',
         headers: {
@@ -336,7 +336,7 @@ export default function CategoriaPage() {
       <div className="bg-white px-4 py-4 shadow-sm sticky top-0 z-10">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center space-x-3">
-            <Link href="/">
+            <Link href="/categorias">
               <Button variant="ghost" size="icon">
                 <ArrowLeft className="w-5 h-5" />
               </Button>

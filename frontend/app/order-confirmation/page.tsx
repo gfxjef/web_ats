@@ -356,7 +356,7 @@ ${orderData.shippingAddress.city}, ${orderData.shippingAddress.zipCode}
                 <h3 className="font-medium text-sm text-gray-900 mb-1 line-clamp-2">{product.name}</h3>
                 <p className="text-sm font-bold text-gray-900 mb-3">S/{product.price}</p>
                 <Button size="sm" variant="outline" className="w-full text-xs">
-                  Agregar al carrito
+                  Add
                 </Button>
               </div>
             ))}

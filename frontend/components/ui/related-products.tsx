@@ -346,9 +346,9 @@ const RelatedProducts = React.forwardRef<HTMLDivElement, RelatedProductsProps>(
         {/* Footer con enlace para ver más */}
         {hasProducts && displayProducts.length >= 4 && (
           <div className="text-center">
-            <Link href={`/categoria/${encodeURIComponent(currentProduct.Categoria)}`}>
+            <Link href={`/categoria/${encodeURIComponent(currentProduct['Sub Categoria'])}`}>
               <Button variant="outline" className="flex items-center space-x-2">
-                <span>Ver más productos de {currentProduct.Categoria}</span>
+                <span>Ver más productos de {currentProduct['Sub Categoria']}</span>
                 <ArrowRight className="w-4 h-4" />
               </Button>
             </Link>

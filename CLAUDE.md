@@ -2,6 +2,33 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## 🎯 Gestión de Issues con GitHub
+**IMPORTANTE**: Solo crea issues en GitHub cuando el usuario EXPLÍCITAMENTE te pida que lo hagas con frases como:
+- "Crea issues para..."
+- "Genera issues de..."
+- "Necesito issues para..."
+- "Hazme issues sobre..."
+
+**NO CREAR ISSUES** automáticamente cuando el usuario simplemente pida ayuda con tareas de desarrollo normal.
+
+### Cuando SÍ crear issues:
+```
+Usuario: "Crea issues para implementar un sistema de autenticación"
+Usuario: "Genera issues para las tareas pendientes del proyecto"
+```
+
+### Cuando NO crear issues:
+```
+Usuario: "Ayúdame a implementar autenticación"
+Usuario: "Necesito agregar una nueva funcionalidad"
+```
+
+### Comandos disponibles para issues:
+- `gh issue create --title "Título" --body "Descripción"`
+- `gh issue close [número] --comment "Motivo"`
+- `gh issue list`
+- `gh issue view [número]`
+
 ## ⚠️ IMPORTANTE: Gestión de Puertos y Servicios
 **SIEMPRE** cierra/mata los servicios cuando termines de usarlos para evitar conflictos de puertos:
 - Puerto 5001 (Backend Flask): `taskkill //PID [PID] //F` en Windows

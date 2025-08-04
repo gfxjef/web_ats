@@ -361,8 +361,8 @@ export default function ProductDetailPage() {
         <div className="space-y-4">
           {/* Breadcrumb */}
           <div className="flex items-center space-x-2 text-sm text-gray-500">
-            <Link href={`/categoria/${encodeURIComponent(product.Categoria)}`} className="hover:text-liquor-orange">
-              {product.Categoria}
+            <Link href={`/categoria/${encodeURIComponent(product['Sub Categoria'])}`} className="hover:text-liquor-orange">
+              {product['Sub Categoria']}
             </Link>
             <ChevronRight className="w-3 h-3" />
             <span>{product['Sub Categoria']}</span>
@@ -494,7 +494,7 @@ export default function ProductDetailPage() {
               className="flex-1 bg-liquor-orange hover:bg-liquor-orange/90 text-white font-semibold py-4 px-6 rounded-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              {product.Stock === 'Sin Stock' ? 'Sin Stock' : 'Agregar'}
+              {product.Stock === 'Sin Stock' ? 'Sin Stock' : 'Add'}
               {product.Stock !== 'Sin Stock' && (
                 <span className="ml-2">S/{totalPrice}</span>
               )}

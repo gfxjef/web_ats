@@ -208,7 +208,7 @@ export function useRelatedProducts(
 
       // Obtener productos de la misma categoría
       const categoryResponse = await fetch(
-        getApiUrl(`/api/v1/productos/categoria/${encodeURIComponent(product.Categoria)}?limit=50&offset=0`),
+        getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(product['Sub Categoria'])}?limit=50&offset=0`),
         {
           method: 'GET',
           headers: {
@@ -368,7 +368,7 @@ export function useRelatedProductsByCategory(
 
     try {
       const response = await fetch(
-        getApiUrl(`/api/v1/productos/categoria/${encodeURIComponent(category)}?limit=${limit * 2}&offset=0`),
+        getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(category)}?limit=${limit * 2}&offset=0`),
         {
           method: 'GET',
           headers: {
