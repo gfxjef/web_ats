@@ -2,6 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Animaciones personalizadas para el carrito */
+@keyframes cartPulse {
+  0% {
+    transform: scale(1) rotate(0deg);
+    background-color: hsl(var(--liquor-orange));
+  }
+  25% {
+    transform: scale(1.2) rotate(-10deg);
+    background-color: hsl(var(--liquor-amber));
+  }
+  50% {
+    transform: scale(1.3) rotate(10deg);
+    background-color: #10b981;
+  }
+  75% {
+    transform: scale(1.2) rotate(-5deg);
+    background-color: hsl(var(--liquor-orange));
+  }
+  100% {
+    transform: scale(1) rotate(0deg);
+    background-color: hsl(var(--liquor-orange));
+  }
+}
+
+@keyframes badgeBounce {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.5);
+  }
+}
+
+.animate-cart-pulse {
+  animation: cartPulse 0.8s ease-in-out;
+}
+
+.animate-badge-bounce {
+  animation: badgeBounce 0.5s ease-in-out;
+}
+
+/* Ocultar scrollbar pero mantener funcionalidad */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;

@@ -14,6 +14,7 @@ import { usePagination } from "@/hooks/use-pagination";
 import { useFilters, createProductFilter } from "@/hooks/use-filters";
 import { useSearch } from "@/hooks/use-debounce";
 import { useLiquorToast } from "@/hooks/use-liquor-toast";
+import { useCartContext } from "@/contexts/cart-context";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -65,6 +66,7 @@ export default function CategoriaPage() {
   const params = useParams();
   const categoria = params.categoria as string;
   const toast = useLiquorToast();
+  const cart = useCartContext();
   
   // Estados para vista y UI
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -308,7 +310,16 @@ export default function CategoriaPage() {
 
   // Función para agregar producto al carrito
   const handleAddToCart = (product: Product) => {
-    toast.productAdded(product.Nombre, 1, product['Precio B']);
+    console.log('Agregando producto al carrito:', product);
+    console.log('Cart object:', cart);
+    
+    try {
+      cart.addItem(product, 1);
+      toast.productAdded(product.Nombre, 1, product['Precio B']);
+    } catch (error) {
+      console.error('Error al agregar al carrito:', error);
+      toast.error('Error al agregar al carrito');
+    }
   };
 
   // Formatear nombre de categoría para mostrar

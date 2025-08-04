@@ -75,9 +75,9 @@ export interface UseCartResult {
 // Configuración por defecto
 const defaultConfig: Required<CartConfig> = {
   storageKey: 'liquor-cart',
-  taxRate: 0.16, // 16% IVA en México
-  freeShippingThreshold: 1500, // Envío gratis a partir de $1500
-  shippingCost: 150, // $150 de envío estándar
+  taxRate: 0, // Impuestos deshabilitados
+  freeShippingThreshold: 0, // Envío gratis siempre (costo de envío es 0)
+  shippingCost: 0, // Costo de envío deshabilitado
   enablePersistence: true,
   maxQuantityPerItem: 50,
 };

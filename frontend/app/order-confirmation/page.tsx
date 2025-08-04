@@ -14,7 +14,8 @@ import {
   CreditCard,
   Download,
   Share2,
-  Home
+  Home,
+  MessageCircle
 } from "lucide-react";
 
 export default function OrderConfirmationPage() {
@@ -95,6 +96,35 @@ export default function OrderConfirmationPage() {
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
+  };
+
+  const handleSendWhatsApp = () => {
+    // Generar mensaje para WhatsApp
+    const whatsappMessage = `🛒 *NUEVO PEDIDO - LICORERÍA ATS*
+
+📋 ID: ${orderData.id}
+📅 Fecha: ${orderData.date}
+👤 Cliente: ${orderData.shippingAddress.name}
+
+🍾 *PRODUCTOS:*
+${orderData.items.map(item => `• ${item.name} (${item.quantity}x) - S/${item.price}`).join('\n')}
+
+💰 *Total: S/${orderData.total.toFixed(2)}*
+
+📍 *Dirección:*
+${orderData.shippingAddress.address}
+${orderData.shippingAddress.city}, ${orderData.shippingAddress.zipCode}
+
+¡Pedido confirmado y listo para procesar!`;
+
+    // Número de WhatsApp de la empresa (configurar según sea necesario)
+    const whatsappNumber = '51987654321'; // Reemplazar con el número real
+    
+    // Crear URL de WhatsApp
+    const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+    
+    // Abrir WhatsApp
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
@@ -263,6 +293,11 @@ export default function OrderConfirmationPage() {
               </h2>
               
               <div className="space-y-3">
+                <Button onClick={handleSendWhatsApp} className="w-full justify-start bg-green-600 hover:bg-green-700 text-white">
+                  <MessageCircle className="w-4 h-4 mr-2" />
+                  Enviar pedido por WhatsApp
+                </Button>
+
                 <Button onClick={handleDownloadReceipt} variant="outline" className="w-full justify-start">
                   <Download className="w-4 h-4 mr-2" />
                   Descargar comprobante

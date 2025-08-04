@@ -2,6 +2,14 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ IMPORTANTE: Gestión de Puertos y Servicios
+**SIEMPRE** cierra/mata los servicios cuando termines de usarlos para evitar conflictos de puertos:
+- Puerto 5001 (Backend Flask): `taskkill //PID [PID] //F` en Windows
+- Puerto 3000 (Frontend Next.js): `taskkill //PID [PID] //F` en Windows
+- Para verificar puertos en uso: `netstat -ano | findstr :[PUERTO]`
+
+Esto es crítico porque pueden quedar servicios ejecutándose en segundo plano que bloquearán nuevas ejecuciones.
+
 ## Common Development Commands
 
 ### Backend (Flask API)

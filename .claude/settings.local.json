@@ -19,7 +19,11 @@
       "Bash(npm install:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(ls:*)"
+      "Bash(ls:*)",
+      "Bash(gh issue list:*)",
+      "Bash(for i in 1 2 3 4 5 6 7 8 9 10)",
+      "Bash(do gh issue close $i --comment \"Issue completado y cerrado.\")",
+      "Bash(done)"
     ],
     "deny": []
   }

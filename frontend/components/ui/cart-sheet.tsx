@@ -1,8 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CartItem } from "@/components/ui/cart-item";
@@ -15,7 +16,10 @@ import {
   Truck,
   Gift,
   AlertCircle,
-  CheckCircle2
+  CheckCircle2,
+  Plus,
+  Sparkles,
+  MessageCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useCartContext } from "@/contexts/cart-context";
@@ -28,11 +32,24 @@ export interface CartSheetProps {
   className?: string;
 }
 
+// Tipo para productos sugeridos
+interface SuggestedProduct {
+  id: number;
+  Nombre: string;
+  'Precio B': number;
+  Photo?: string;
+  Categoria: string;
+}
+
 const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
   ({ isOpen, onClose, onCheckout, className }, ref) => {
     const toast = useLiquorToast();
     const cart = useCartContext();
     const [isClearing, setIsClearing] = useState(false);
+    const [suggestedProducts, setSuggestedProducts] = useState<SuggestedProduct[]>([]);
+    
+    // Estado para el envío de pedido por WhatsApp
+    const [isProcessingOrder, setIsProcessingOrder] = useState(false);
 
     const {
       items,
@@ -45,6 +62,75 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
       incrementQuantity,
       decrementQuantity,
     } = cart;
+
+    // Cargar productos sugeridos cuando se abre el carrito
+    useEffect(() => {
+      if (isOpen && hasItems) {
+        // Obtener categorías únicas del carrito
+        const categories = [...new Set(items.map(item => item.Categoria))];
+        
+        // Por ahora, usar productos de ejemplo (en producción esto vendría de la API)
+        const mockSuggestions: SuggestedProduct[] = [
+          { id: 101, Nombre: "Ron Bacardí Añejo", 'Precio B': 89.90, Categoria: "RON" },
+          { id: 102, Nombre: "Whisky Johnnie Walker", 'Precio B': 129.90, Categoria: "WHISKY" },
+          { id: 103, Nombre: "Vodka Absolut", 'Precio B': 79.90, Categoria: "VODKA" },
+          { id: 104, Nombre: "Tequila Jose Cuervo", 'Precio B': 99.90, Categoria: "TEQUILA" },
+        ];
+        
+        setSuggestedProducts(mockSuggestions);
+      }
+    }, [isOpen, hasItems, items]);
+
+    // Función para generar y enviar pedido por WhatsApp
+    const handleWhatsAppOrder = () => {      
+      if (isEmpty) {
+        toast.error('Tu carrito está vacío');
+        return;
+      }
+
+      setIsProcessingOrder(true);
+
+      try {
+        // Generar mensaje como si fuera enviado por el cliente
+        const whatsappMessage = `Hola! 👋 
+
+Quiero realizar el pedido de los siguientes productos cotizados vía web:
+
+${items.map(item => `• ${item.quantity}x ${item.Nombre} - S/ ${(item.unitPrice * item.quantity).toFixed(2)}`).join('\n')}
+
+*Total: S/ ${summary.subtotal.toFixed(2)}*
+
+¿Podrían confirmarme la disponibilidad y el tiempo de entrega?
+
+Gracias! 😊`;
+
+        // Número de WhatsApp del negocio (938101013 con código de país de Perú)
+        const whatsappNumber = '51938101013';
+        
+        // Crear URL de WhatsApp
+        const whatsappUrl = `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(whatsappMessage)}`;
+        
+        // Abrir WhatsApp
+        window.open(whatsappUrl, '_blank');
+        
+        // Limpiar carrito después de enviar
+        clearCart();
+        
+        // Cerrar carrito
+        onClose();
+        
+        toast.success('Pedido enviado por WhatsApp', {
+          description: 'Tu pedido se ha enviado correctamente'
+        });
+
+      } catch (error) {
+        toast.error('Error al procesar pedido', {
+          description: 'Inténtalo de nuevo'
+        });
+      } finally {
+        setIsProcessingOrder(false);
+      }
+    };
 
     // Manejar eliminación de item
     const handleRemoveItem = (productId: number) => {
@@ -189,23 +275,65 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
                 )}
 
                 {/* Lista de items */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                  {items.map((item) => (
-                    <CartItem
-                      key={item.id}
-                      item={item}
-                      variant="default"
-                      showActions={true}
-                      showRemove={true}
-                      showWishlist={false}
-                      showLink={true}
-                      onQuantityChange={handleQuantityChange}
-                      onRemove={handleRemoveItem}
-                      onViewProduct={() => {
-                        onClose();
-                      }}
-                    />
-                  ))}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="p-4 space-y-3">
+                    {items.map((item) => (
+                      <CartItem
+                        key={item.id}
+                        item={item}
+                        variant="default"
+                        showActions={true}
+                        showRemove={true}
+                        showWishlist={false}
+                        showLink={true}
+                        onQuantityChange={handleQuantityChange}
+                        onRemove={handleRemoveItem}
+                        onViewProduct={() => {
+                          onClose();
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Sección de productos sugeridos - Movida aquí */}
+                  {suggestedProducts.length > 0 && (
+                    <div className="px-4 pb-4">
+                      <div className="flex items-center gap-1 mb-2">
+                        <Sparkles className="w-3 h-3 text-liquor-orange" />
+                        <h3 className="text-xs font-semibold text-gray-700">Te puede interesar</h3>
+                      </div>
+                      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                        {suggestedProducts.slice(0, 6).map((product) => (
+                          <div
+                            key={product.id}
+                            className="flex-shrink-0 bg-white rounded-lg p-2 border border-gray-200 hover:border-liquor-orange/50 transition-colors cursor-pointer w-20"
+                            onClick={() => {
+                              cart.addItem(product as any, 1);
+                              toast.productAdded(product.Nombre, 1, product['Precio B']);
+                            }}
+                          >
+                            <div className="relative aspect-square mb-1">
+                              <Image
+                                src={product.Photo || "https://images.pexels.com/photos/602750/pexels-photo-602750.jpeg"}
+                                alt={product.Nombre}
+                                fill
+                                className="object-cover rounded"
+                              />
+                              <Button
+                                size="sm"
+                                variant="liquorOrange"
+                                className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full p-0"
+                              >
+                                <Plus className="w-3 h-3" />
+                              </Button>
+                            </div>
+                            <h4 className="text-[10px] font-medium text-gray-900 line-clamp-2 leading-tight">{product.Nombre}</h4>
+                            <p className="text-[10px] font-bold text-liquor-orange">S/{product['Precio B']}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* Acciones del carrito */}
@@ -214,45 +342,20 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
                     <span className="text-sm text-gray-600">
                       {summary.uniqueItemCount} {summary.uniqueItemCount === 1 ? 'producto' : 'productos'}
                     </span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
                       onClick={handleClearCart}
                       disabled={isClearing}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      className="text-xs text-red-600 hover:text-red-700 underline"
                     >
-                      <Trash2 className="w-4 h-4 mr-1" />
-                      Limpiar todo
-                    </Button>
+                      Limpiar carrito
+                    </button>
                   </div>
 
-                  {/* Resumen de precios */}
+                  {/* Resumen de precios simplificado */}
                   <div className="space-y-2 mb-4">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600">Subtotal</span>
                       <span className="font-medium">S/{summary.subtotal.toFixed(2)}</span>
-                    </div>
-                    
-                    {summary.shipping > 0 && (
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600">Envío</span>
-                        <span className="font-medium">S/{summary.shipping.toFixed(2)}</span>
-                      </div>
-                    )}
-                    
-                    {summary.shipping === 0 && summary.subtotal >= 1500 && (
-                      <div className="flex justify-between text-sm text-green-600">
-                        <span className="flex items-center">
-                          <CheckCircle2 className="w-4 h-4 mr-1" />
-                          Envío gratis
-                        </span>
-                        <span className="font-medium">S/0.00</span>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-600">Impuestos (16%)</span>
-                      <span className="font-medium">S/{summary.tax.toFixed(2)}</span>
                     </div>
                     
                     {summary.discount > 0 && (
@@ -266,36 +369,30 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
                       <div className="flex justify-between">
                         <span className="font-semibold text-gray-900">Total</span>
                         <span className="font-bold text-lg text-gray-900">
-                          S/{summary.total.toFixed(2)}
+                          S/{summary.subtotal.toFixed(2)}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   {/* Botones de acción */}
-                  <div className="space-y-3">
+                  <div className="flex gap-2">
                     <Button
-                      onClick={handleCheckout}
-                      className="w-full bg-liquor-orange hover:bg-liquor-orange/90 text-white font-semibold py-3"
-                      disabled={isEmpty}
+                      onClick={handleWhatsAppOrder}
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white font-semibold py-2.5 shadow-lg hover:shadow-xl transition-shadow"
+                      disabled={isEmpty || isProcessingOrder}
                     >
-                      <Package className="w-4 h-4 mr-2" />
-                      Proceder al checkout
-                      <ArrowRight className="w-4 h-4 ml-2" />
+                      <MessageCircle className="w-4 h-4 mr-1" />
+                      {isProcessingOrder ? 'Enviando...' : 'Finalizar Pedido'}
                     </Button>
                     
-                    <Link href="/cart" onClick={onClose} className="block">
-                      <Button variant="outline" className="w-full">
-                        Ver carrito completo
-                      </Button>
-                    </Link>
-                    
                     <Button 
-                      variant="ghost" 
+                      variant="outline" 
                       onClick={onClose}
-                      className="w-full text-gray-600"
+                      className="flex-1 text-gray-600 py-2.5"
+                      disabled={isProcessingOrder}
                     >
-                      Continuar comprando
+                      Seguir comprando
                     </Button>
                   </div>
                 </div>

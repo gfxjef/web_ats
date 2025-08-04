@@ -16,7 +16,7 @@ export function BottomNavigation() {
     if (pathname.startsWith('/categoria') || pathname.startsWith('/categorias')) return 'categories';
     if (pathname.startsWith('/offers') || pathname.startsWith('/promociones')) return 'offers';
     if (pathname.startsWith('/orders') || pathname.startsWith('/pedidos')) return 'orders';
-    if (pathname.startsWith('/cart') || pathname.startsWith('/carrito')) return 'cart';
+    // Cart no tiene página dedicada, se maneja por CartSheet
     return 'home'; // Default
   };
 
