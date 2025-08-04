@@ -97,7 +97,7 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
 
 Quiero realizar el pedido de los siguientes productos cotizados vía web:
 
-${items.map(item => `• ${item.quantity}x ${item.Nombre} - S/ ${(item.unitPrice * item.quantity).toFixed(2)}`).join('\n')}
+${items.map(item => `• ${item.quantity}x ${item.Nombre} (${item.Modelo}) - S/ ${(item.unitPrice * item.quantity).toFixed(2)}`).join('\n')}
 
 *Total: S/ ${summary.subtotal.toFixed(2)}*
 
