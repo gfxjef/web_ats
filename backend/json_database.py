@@ -10,6 +10,7 @@ import schedule
 import re
 
 from utils.database import get_db_connection, close_db_connection
+import json as json_lib
 
 # Configuración
 JSON_DB_FILE = Path("database") / "productos_db.json"
@@ -39,6 +40,24 @@ class JSONDatabase:
             'brands': {},
             'last_query_time': 0
         }
+        self.ventas_data = {}
+        self._load_ventas_data()
+    
+    def _load_ventas_data(self):
+        """Cargar datos de análisis de ventas"""
+        try:
+            ventas_file = Path("database") / "ventas_analysis.json"
+            if ventas_file.exists():
+                with open(ventas_file, 'r', encoding='utf-8') as f:
+                    data = json_lib.load(f)
+                    # Crear diccionario SKU -> total_vendido
+                    for categoria, productos in data.get('top_por_categoria', {}).items():
+                        for producto in productos:
+                            self.ventas_data[producto['SKU']] = producto.get('total_vendido', 0)
+                logger.info(f"Datos de ventas cargados: {len(self.ventas_data)} productos")
+        except Exception as e:
+            logger.warning(f"No se pudieron cargar datos de ventas: {e}")
+            self.ventas_data = {}
         
     def load_from_mysql(self):
         """Cargar todos los datos desde MySQL"""
@@ -264,12 +283,17 @@ class JSONDatabase:
         self.stats['last_query_time'] = time.time() - start_time
         return result
     
-    def get_by_categoria(self, categoria: str, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
-        """SELECT * FROM productos WHERE Categoria = ? LIMIT ? OFFSET ?"""
+    def get_by_categoria(self, categoria: str, limit: Optional[int] = None, offset: int = 0, order_by_sales: bool = True) -> List[Dict]:
+        """SELECT * FROM productos WHERE Categoria = ? ORDER BY ventas DESC LIMIT ? OFFSET ?"""
         start_time = time.time()
         
         with db_lock:
-            products = self.indexes['by_categoria'].get(categoria, [])
+            products = self.indexes['by_categoria'].get(categoria, []).copy()
+            
+            # Ordenar por ventas si está habilitado
+            if order_by_sales and self.ventas_data:
+                products.sort(key=lambda p: self.ventas_data.get(p['SKU'], 0), reverse=True)
+            
             if limit:
                 result = products[offset:offset + limit]
             else:
@@ -278,12 +302,18 @@ class JSONDatabase:
         self.stats['last_query_time'] = time.time() - start_time
         return result
     
-    def get_by_sub_categoria(self, sub_categoria: str, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
-        """SELECT * FROM productos WHERE `Sub Categoria` = ? LIMIT ? OFFSET ?"""
+    def get_by_sub_categoria(self, sub_categoria: str, limit: Optional[int] = None, offset: int = 0, order_by_sales: bool = True) -> List[Dict]:
+        """SELECT * FROM productos WHERE `Sub Categoria` = ? ORDER BY ventas DESC LIMIT ? OFFSET ?"""
         start_time = time.time()
         
         with db_lock:
-            products = self.indexes['by_sub_categoria'].get(sub_categoria, [])
+            products = self.indexes['by_sub_categoria'].get(sub_categoria, []).copy()
+            
+            # Ordenar por ventas si está habilitado
+            if order_by_sales and self.ventas_data:
+                # Primero los más vendidos, luego los demás
+                products.sort(key=lambda p: self.ventas_data.get(p['SKU'], 0), reverse=True)
+            
             if limit:
                 result = products[offset:offset + limit]
             else:

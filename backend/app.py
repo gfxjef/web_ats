@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask_caching import Cache
 from config import Config
 from api.v1.endpoints.productos import create_json_productos_endpoints
+from api.v1.endpoints.ventas import ventas_bp
 from json_database import start_json_database, json_db
 import time
 
@@ -47,6 +48,9 @@ def create_app():
     productos_json_bp = create_json_productos_endpoints()
     app.register_blueprint(productos_json_bp, url_prefix='/api/v1/productos')
     
+    # Registrar endpoints de ventas
+    app.register_blueprint(ventas_bp, url_prefix='/api/v1/ventas')
+    
     @app.route('/')
     def home():
         """Endpoint de bienvenida"""
@@ -66,6 +70,13 @@ def create_app():
                     'categorias': '/api/v1/productos/categorias',
                     'destacados': '/api/v1/productos/destacados',
                     'stats': '/api/v1/productos/stats'
+                },
+                'ventas': {
+                    'top_general': '/api/v1/ventas/top_general',
+                    'top_categoria': '/api/v1/ventas/top_categoria/<categoria>',
+                    'top_todas': '/api/v1/ventas/top_todas_categorias',
+                    'estadisticas': '/api/v1/ventas/estadisticas',
+                    'categorias': '/api/v1/ventas/categorias_con_ventas'
                 }
             },
             'optimizaciones': {
