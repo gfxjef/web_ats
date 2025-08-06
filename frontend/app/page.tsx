@@ -673,7 +673,7 @@ export default function HomePage() {
         cache: 'default',
       });
 
-      let searchData = [];
+      let searchData: WhiskyProduct[] = [];
 
       if (response.ok) {
         const data = await response.json();

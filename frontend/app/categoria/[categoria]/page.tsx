@@ -213,7 +213,7 @@ export default function CategoriaPage() {
     } else {
       console.warn('⚠️ Categoría inválida o vacía');
     }
-  }, [categoria]); // Solo depender de categoria, no de las funciones
+  }, [categoria, reset, clearFilters]);
   
   // Extraer filtros disponibles de los productos cargados
   useEffect(() => {
@@ -392,7 +392,7 @@ export default function CategoriaPage() {
       setGlobalSearchResults([]);
       setIsGlobalSearching(false);
     }
-  }, [search.setQuery, updateFilter]);
+  }, [search, updateFilter]);
   
   // Manejar búsqueda directa
   const handleSearch = useCallback((query: string) => {
@@ -622,7 +622,7 @@ export default function CategoriaPage() {
             </h3>
             <p className="text-gray-600 mb-4">
               {activeFilters.searchQuery && activeFilters.searchQuery.trim() ? (
-                <>No se encontraron productos con "{activeFilters.searchQuery}" en {formatCategoryName(categoria)}</>
+                <>No se encontraron productos con &quot;{activeFilters.searchQuery}&quot; en {formatCategoryName(categoria)}</>
               ) : (
                 <>No se encontraron productos en la categoría {formatCategoryName(categoria)}</>
               )}
