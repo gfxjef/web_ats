@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Home, Grid3X3, Percent, Package, ShoppingCart } from "lucide-react";
+import { Home, Grid3X3, Heart, MessageCircle, ShoppingCart } from "lucide-react";
 import { useCartContext } from "@/contexts/cart-context";
 
 export function BottomNavigation() {
@@ -45,48 +45,48 @@ export function BottomNavigation() {
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50 max-w-md mx-auto">
+    <div className="fixed bottom-3 left-4 right-4 bg-white border border-gray-200 rounded-full px-6 py-3 z-50 max-w-md mx-auto will-change-transform">
       <div className="flex justify-around items-center">
         {/* Home */}
         <button 
           onClick={() => handleNavigation('home')}
-          className="flex flex-col items-center space-y-1"
+          className="flex flex-col items-center space-y-1 p-2 -m-2 rounded-full transition-colors"
         >
-          <Home className={`w-6 h-6 ${activeTab === 'home' ? 'text-gray-900' : 'text-gray-400'}`} />
-          <span className={`text-xs ${activeTab === 'home' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Inicio</span>
+          <Home className={`w-6 h-6 ${activeTab === 'home' ? 'text-liquor-orange' : 'text-gray-400'}`} />
+          <span className={`text-xs ${activeTab === 'home' ? 'font-medium text-liquor-orange' : 'text-gray-400'}`}>Inicio</span>
         </button>
         
         {/* Categories */}
         <button 
           onClick={() => handleNavigation('categories')}
-          className="flex flex-col items-center space-y-1"
+          className="flex flex-col items-center space-y-1 p-2 -m-2 rounded-full transition-colors"
         >
-          <Grid3X3 className={`w-6 h-6 ${activeTab === 'categories' ? 'text-gray-900' : 'text-gray-400'}`} />
-          <span className={`text-xs ${activeTab === 'categories' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Categoría</span>
+          <Grid3X3 className={`w-6 h-6 ${activeTab === 'categories' ? 'text-liquor-orange' : 'text-gray-400'}`} />
+          <span className={`text-xs ${activeTab === 'categories' ? 'font-medium text-liquor-orange' : 'text-gray-400'}`}>Categoría</span>
         </button>
         
         {/* Offers */}
         <button 
           onClick={() => handleNavigation('offers')}
-          className="flex flex-col items-center space-y-1"
+          className="flex flex-col items-center space-y-1 p-2 -m-2 rounded-full transition-colors"
         >
-          <Percent className={`w-6 h-6 ${activeTab === 'offers' ? 'text-gray-900' : 'text-gray-400'}`} />
-          <span className={`text-xs ${activeTab === 'offers' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Offers</span>
+          <Heart className={`w-6 h-6 ${activeTab === 'offers' ? 'text-liquor-orange' : 'text-gray-400'}`} />
+          <span className={`text-xs ${activeTab === 'offers' ? 'font-medium text-liquor-orange' : 'text-gray-400'}`}>Love</span>
         </button>
         
         {/* Orders */}
         <button 
           onClick={() => handleNavigation('orders')}
-          className="flex flex-col items-center space-y-1"
+          className="flex flex-col items-center space-y-1 p-2 -m-2 rounded-full transition-colors"
         >
-          <Package className={`w-6 h-6 ${activeTab === 'orders' ? 'text-gray-900' : 'text-gray-400'}`} />
-          <span className={`text-xs ${activeTab === 'orders' ? 'font-medium text-gray-900' : 'text-gray-400'}`}>Orders</span>
+          <MessageCircle className={`w-6 h-6 ${activeTab === 'orders' ? 'text-liquor-orange' : 'text-gray-400'}`} />
+          <span className={`text-xs ${activeTab === 'orders' ? 'font-medium text-liquor-orange' : 'text-gray-400'}`}>Chat</span>
         </button>
         
         {/* Cart */}
         <button 
           onClick={() => handleNavigation('cart')}
-          className="flex flex-col items-center space-y-1 relative"
+          className="flex flex-col items-center space-y-1 relative p-2 -m-2 rounded-full transition-colors"
           data-cart-trigger
         >
           <div className="relative">
@@ -97,7 +97,7 @@ export function BottomNavigation() {
               </span>
             )}
           </div>
-          <span className="text-xs text-gray-400">Cart</span>
+          <span className="text-xs text-gray-400">Carrito</span>
         </button>
       </div>
     </div>
