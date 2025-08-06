@@ -34,7 +34,9 @@
       "Bash(gh issue create:*)",
       "Bash(gh issue close:*)",
       "Bash(copy \"json_database(no eliminar).py\" json_database.py)",
-      "Bash(cp:*)"
+      "Bash(cp:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run lint:*)"
     ],
     "deny": []
   }

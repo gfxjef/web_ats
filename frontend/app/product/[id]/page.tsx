@@ -330,7 +330,7 @@ export default function ProductDetailPage() {
 
       {/* Product Image Section */}
       <div className="bg-white px-4 py-8">
-        <div className="flex justify-center mb-6">
+        <div className="flex justify-center">
           <div className="w-64 h-80 relative">
             <Image 
               src={productImages[currentImageIndex]}
@@ -365,11 +365,13 @@ export default function ProductDetailPage() {
               {product['Sub Categoria']}
             </Link>
             <ChevronRight className="w-3 h-3" />
-            <span>{product['Sub Categoria']}</span>
+            <Link href={`/search?nombre=${encodeURIComponent(product.Nombre)}`} className="hover:text-liquor-orange">
+              {product.Nombre}
+            </Link>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">
-            {product.Nombre}
+          <h1 className="font-bold text-gray-900 leading-tight" style={{fontSize: '1.9rem'}}>
+            {product.Nombre} {product.Modelo} {product.Tamaño}
           </h1>
 
           {/* Price and Stock */}
@@ -378,11 +380,9 @@ export default function ProductDetailPage() {
               <span className="text-2xl font-bold text-gray-900">
                 S/{product['Precio B']}
               </span>
-              {product['Precio J'] !== product['Precio B'] && (
-                <span className="text-lg text-gray-500 line-through">
-                  S/{product['Precio J']}
-                </span>
-              )}
+              <span className="text-lg text-gray-500 line-through">
+                S/{(product['Precio B'] * 1.05).toFixed(2)}
+              </span>
             </div>
             <div className="flex items-center space-x-2">
               {product.Stock === 'Sin Stock' ? (
@@ -394,22 +394,14 @@ export default function ProductDetailPage() {
           </div>
 
           {/* Product Details */}
-          <div className="bg-gray-50 rounded-2xl p-4 space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Tamaño:</span>
-              <span className="font-medium">{product.Tamaño}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-gray-600">Modelo:</span>
-              <span className="font-medium">{product.Modelo}</span>
-            </div>
-            {product['Al Por Mayor'] === 'Si' && (
+          {product['Al Por Mayor'] === 'Si' && (
+            <div className="bg-gray-50 rounded-2xl p-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-600">Disponible al por mayor:</span>
                 <span className="font-medium text-liquor-orange">Sí</span>
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
 
           {/* Description */}

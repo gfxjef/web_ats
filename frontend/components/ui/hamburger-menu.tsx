@@ -56,16 +56,16 @@ export function HamburgerMenu({ className = "" }: HamburgerMenuProps) {
       name: "Sede Bayóvar",
       address: "San Juan de Lurigancho, Lima",
       mapUrl: "https://maps.app.goo.gl/Xgn8HXiJyLv5sjKU9",
-      hours: "Lun - Sab: 9:00 AM - 10:00 PM",
-      phone: "+51 999 999 999"
+      hours: "Lun - Sab: 9:00 AM - 11:50 PM",
+      phone: "+51 938 101 013"
     },
     {
       id: 2,
       name: "Sede Jardines", 
-      address: "Santiago de Surco, Lima",
+      address: "San Juan de Lurigancho, Lima",
       mapUrl: "https://maps.app.goo.gl/pb7iNKYb23LVbNUQ7",
-      hours: "Lun - Sab: 9:00 AM - 10:00 PM",
-      phone: "+51 888 888 888"
+      hours: "Lun - Sab: 9:00 AM - 11:50 PM",
+      phone: "+51 9381 101 013"
     }
   ];
 
