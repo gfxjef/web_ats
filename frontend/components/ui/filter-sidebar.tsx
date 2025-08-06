@@ -7,21 +7,8 @@ import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
 import { X, Filter } from "lucide-react";
 
-// Tipos para los filtros
-export interface FilterOptions {
-  subcategorias?: string[];
-  tamanos?: string[];
-  stock?: string[];
-  precioMin?: number;
-  precioMax?: number;
-}
-
-export interface ActiveFilters {
-  subcategorias: string[];
-  tamanos: string[];
-  stock: string[];
-  precioRange: [number, number];
-}
+// Importar tipos del hook para consistencia
+import type { FilterOptions, ActiveFilters } from "@/hooks/use-filters";
 
 export interface FilterSidebarProps {
   isOpen: boolean;
@@ -34,7 +21,28 @@ export interface FilterSidebarProps {
 
 const FilterSidebar = React.forwardRef<HTMLDivElement, FilterSidebarProps>(
   ({ isOpen, onClose, onFiltersChange, availableFilters, activeFilters, className }, ref) => {
-    const [localFilters, setLocalFilters] = useState<ActiveFilters>(activeFilters);
+    // Extraer solo los filtros relevantes para el sidebar
+    const sidebarFilters: ActiveFilters = {
+      subcategorias: activeFilters.subcategorias || [],
+      tamanos: activeFilters.tamanos || [],
+      stock: activeFilters.stock || [],
+      precioRange: activeFilters.precioRange || [availableFilters.precioMin || 0, availableFilters.precioMax || 1000],
+      searchQuery: activeFilters.searchQuery
+    };
+    
+    const [localFilters, setLocalFilters] = useState<ActiveFilters>(sidebarFilters);
+
+    // Sincronizar con activeFilters cuando cambien
+    React.useEffect(() => {
+      const updatedFilters: ActiveFilters = {
+        subcategorias: activeFilters.subcategorias || [],
+        tamanos: activeFilters.tamanos || [],
+        stock: activeFilters.stock || [],
+        precioRange: activeFilters.precioRange || [availableFilters.precioMin || 0, availableFilters.precioMax || 1000],
+        searchQuery: activeFilters.searchQuery
+      };
+      setLocalFilters(updatedFilters);
+    }, [activeFilters, availableFilters]);
 
     // Aplicar filtros
     const handleApplyFilters = () => {
@@ -90,7 +98,8 @@ const FilterSidebar = React.forwardRef<HTMLDivElement, FilterSidebarProps>(
       localFilters.tamanos.length + 
       localFilters.stock.length +
       (localFilters.precioRange[0] !== (availableFilters.precioMin || 0) || 
-       localFilters.precioRange[1] !== (availableFilters.precioMax || 1000) ? 1 : 0);
+       localFilters.precioRange[1] !== (availableFilters.precioMax || 1000) ? 1 : 0) +
+      (localFilters.searchQuery && localFilters.searchQuery.trim() ? 1 : 0);
 
     if (!isOpen) return null;
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ProductRowSkeleton } from "@/components/ui/product-card-skeleton";
+import { HamburgerMenu } from "@/components/ui/hamburger-menu";
 import { useLiquorToast } from "@/hooks/use-liquor-toast";
 import { useCartContext } from "@/contexts/cart-context";
 import { useAnalytics } from "@/hooks/use-analytics";
@@ -190,9 +191,11 @@ export default function HomePage() {
   const [searchResults, setSearchResults] = useState<WhiskyProduct[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [allSearchResults, setAllSearchResults] = useState<WhiskyProduct[]>([]);
 
   // Estado global de loading para optimizar UX
   const [globalLoading, setGlobalLoading] = useState(true);
+
 
   // Función para cargar categorías
   const loadCategories = async () => {
@@ -646,10 +649,11 @@ export default function HomePage() {
     };
   }, []);
 
-  // Función de búsqueda de productos
+  // Función de búsqueda GLOBAL de productos
   const searchProducts = useCallback(async (query: string) => {
     if (!query.trim() || query.length < 2) {
       setSearchResults([]);
+      setAllSearchResults([]);
       setShowSearchDropdown(false);
       return;
     }
@@ -658,7 +662,10 @@ export default function HomePage() {
     trackSearch(query); // Track búsqueda en GA
     
     try {
-      const response = await fetch(getApiUrl(`/api/v1/productos/buscar/${encodeURIComponent(query)}?limit=10`), {
+      console.log(`🔍 Búsqueda global para: "${query}"`);
+      
+      // BÚSQUEDA GLOBAL: Usar solo la API para encontrar TODOS los productos
+      const response = await fetch(getApiUrl(`/api/v1/productos/buscar/${encodeURIComponent(query)}?limit=100`), {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -666,27 +673,92 @@ export default function HomePage() {
         cache: 'default',
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      let searchData = [];
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          searchData = data.data;
+          console.log(`✅ API encontró ${searchData.length} productos`);
+        } else {
+          console.warn('⚠️ API respuesta sin datos válidos:', data);
+        }
+      } else {
+        console.error(`❌ Error en API: ${response.status} ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        setSearchResults(data.data);
-        setShowSearchDropdown(true);
-      } else {
-        setSearchResults([]);
-        setShowSearchDropdown(false);
+      // Si la API no funciona, hacer búsqueda local como fallback (limitada)
+      if (searchData.length === 0) {
+        console.log('🔄 Fallback: Buscando en productos locales cargados...');
+        const allLoadedProducts = [
+          ...whiskies,
+          ...combos,
+          ...recommendedProducts,
+          ...cervezas
+        ];
+
+        const searchTerm = query.toLowerCase().trim();
+        
+        searchData = allLoadedProducts.filter(product => {
+          // Función de búsqueda inteligente
+          const searchInField = (field: string) => {
+            if (!field) return false;
+            field = field.toLowerCase();
+            
+            // Búsqueda exacta
+            if (field.includes(searchTerm)) return true;
+            
+            // Búsqueda por palabras múltiples
+            const words = searchTerm.split(' ').filter(w => w.length > 0);
+            if (words.length > 1) {
+              return words.every(word => field.includes(word));
+            }
+            
+            return false;
+          };
+          
+          const nombre = product.Nombre || '';
+          const modelo = product.Modelo || '';
+          const tamaño = product.Tamaño || '';
+          const categoria = product.Categoria || '';
+          const subCategoria = product['Sub Categoria'] || '';
+          const descripcion = product.Descripcion || '';
+          
+          return searchInField(nombre) ||
+                 searchInField(modelo) ||
+                 searchInField(tamaño) ||
+                 searchInField(categoria) ||
+                 searchInField(subCategoria) ||
+                 searchInField(descripcion);
+        });
+        
+        console.log(`🔄 Búsqueda local encontró ${searchData.length} productos (limitado a categorías cargadas)`);
       }
+
+      console.log(`🎯 Búsqueda total "${query}": ${searchData.length} productos encontrados`);
+      
+      // Mostrar algunos productos encontrados para debugging
+      if (searchData.length > 0) {
+        console.log('📋 Primeros resultados:', searchData.slice(0, 3).map(p => ({
+          nombre: p.Nombre,
+          categoria: p.Categoria,
+          subCategoria: p['Sub Categoria']
+        })));
+      }
+      
+      setSearchResults(searchData.slice(0, 10)); // Limitar a 10 para el dropdown
+      setAllSearchResults(searchData); // Guardar todos los resultados
+      setShowSearchDropdown(searchData.length > 0);
+      
     } catch (error) {
-      console.error('Error en búsqueda:', error);
+      console.error('❌ Error completo en búsqueda:', error);
       setSearchResults([]);
+      setAllSearchResults([]);
       setShowSearchDropdown(false);
     } finally {
       setSearchLoading(false);
     }
-  }, []);
+  }, [whiskies, combos, recommendedProducts, cervezas]);
 
   // Debounce para la búsqueda
   useEffect(() => {
@@ -726,13 +798,13 @@ export default function HomePage() {
         </div>
         
         <div className="flex items-center space-x-3">
-          <div className="bg-gradient-to-r from-orange-500 to-purple-600 text-white px-3 py-1 rounded-full flex items-center space-x-1">
-            <span className="text-xs font-medium">⚡</span>
-            <span className="text-xs font-medium">FAST DELIVERY</span>
+          <div className="text-right">
+            <h1 className="text-sm sm:text-base font-medium text-gray-700 leading-tight">
+              Tu Aliado para cada<br/>
+              <span className="text-orange-600 font-semibold">Celebración</span>
+            </h1>
           </div>
-          <div className="w-10 h-10 bg-orange-200 rounded-full flex items-center justify-center">
-            <span className="text-lg">👨🏾</span>
-          </div>
+          <HamburgerMenu />
         </div>
       </div>
 
@@ -782,8 +854,26 @@ export default function HomePage() {
                     </div>
                   ))}
                   <div className="p-2 text-center border-t border-gray-100">
-                    <p className="text-xs text-gray-500">Mostrando {searchResults.length} resultados</p>
+                    <p className="text-xs text-gray-500">Mostrando {searchResults.length} de {allSearchResults.length} resultados</p>
                   </div>
+                  {/* Enlace para mostrar todos los resultados */}
+                  {allSearchResults.length > 10 && (
+                    <div className="border-t border-gray-100">
+                      <button
+                        onClick={() => {
+                          setShowSearchDropdown(false);
+                          // TODO: Navegar a página de resultados con searchQuery
+                          console.log(`🔍 Mostrar todos los ${allSearchResults.length} resultados para: "${searchQuery}"`);
+                          toast.success(`Búsqueda: "${searchQuery}"`, {
+                            description: `${allSearchResults.length} productos encontrados`
+                          });
+                        }}
+                        className="w-full p-3 text-center text-orange-600 hover:bg-orange-50 transition-colors duration-150 font-medium text-sm border-t border-gray-100"
+                      >
+                        Ver todos los resultados ({allSearchResults.length})
+                      </button>
+                    </div>
+                  )}
                 </>
               ) : searchQuery.length >= 2 ? (
                 <div className="p-4 text-center text-gray-500">

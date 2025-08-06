@@ -337,7 +337,7 @@ class JSONDatabase:
         return result
     
     def search_products(self, query: str, limit: Optional[int] = None, offset: int = 0) -> List[Dict]:
-        """Búsqueda optimizada por nombre"""
+        """Búsqueda optimizada en múltiples campos"""
         start_time = time.time()
         
         with db_lock:
@@ -345,17 +345,24 @@ class JSONDatabase:
             query_lower = query.lower()
             
             for product in self.data:
-                if (query_lower in product['Nombre'].lower() or 
-                    query_lower in product['Modelo'].lower() or
-                    query_lower in product['Categoria'].lower() or
-                    query_lower in product['Sub Categoria'].lower()):
+                # Búsqueda en 6 campos: Nombre, Modelo, Tamaño, Categoria, Sub Categoria, Descripcion
+                if (query_lower in product.get('Nombre', '').lower() or 
+                    query_lower in product.get('Modelo', '').lower() or
+                    query_lower in product.get('Tamaño', '').lower() or
+                    query_lower in product.get('Categoria', '').lower() or
+                    query_lower in product.get('Sub Categoria', '').lower() or
+                    query_lower in product.get('Descripcion', '').lower()):
                     results.append(product)
                     
                 if limit and len(results) >= limit + offset:
                     break
         
         self.stats['last_query_time'] = time.time() - start_time
-        return results
+        return results[offset:] if offset > 0 else results
+    
+    def search_by_name(self, query: str, limit: Optional[int] = None) -> List[Dict]:
+        """Alias para mantener compatibilidad con API endpoints"""
+        return self.search_products(query, limit)
     
     def get_categories(self) -> List[Dict]:
         """SELECT Sub Categoria, COUNT(*) as total FROM productos GROUP BY Sub Categoria ORDER BY Sub Categoria Nivel"""

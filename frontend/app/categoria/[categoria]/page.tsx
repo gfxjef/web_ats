@@ -73,6 +73,8 @@ export default function CategoriaPage() {
   const [paginationVariant, setPaginationVariant] = useState<'default' | 'compact' | 'detailed'>('default');
   const [autoScroll, setAutoScroll] = useState(false);
   const [showFilterSidebar, setShowFilterSidebar] = useState(false);
+  const [globalSearchResults, setGlobalSearchResults] = useState<Product[]>([]); // Resultados de búsqueda global
+  const [isGlobalSearching, setIsGlobalSearching] = useState(false);
   
   // Hook de filtros
   const filters = useFilters({
@@ -97,36 +99,52 @@ export default function CategoriaPage() {
   
   // Función de fetch para el hook de paginación
   const fetchProducts = useCallback(async (offset: number, limit: number) => {
-    const response = await fetch(
-      getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(categoria)}?limit=${limit}&offset=${offset}`),
-      {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        cache: 'default',
-        keepalive: true,
+    try {
+      // Verificar que la categoría existe
+      if (!categoria || categoria.trim() === '') {
+        throw new Error('Categoría no válida');
       }
-    );
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      console.log(`🔍 Cargando productos para categoría: ${categoria}`);
+      
+      const response = await fetch(
+        getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(categoria)}?limit=${limit}&offset=${offset}`),
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          cache: 'default',
+          keepalive: true,
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`❌ API Error ${response.status}:`, errorText);
+        throw new Error(`Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data: ApiResponse = await response.json();
+      
+      if (!data.success) {
+        console.error('❌ API Response Error:', data);
+        throw new Error('Error en la respuesta del servidor');
+      }
+
+      console.log(`✅ Productos cargados: ${data.data?.length || 0} items`);
+      console.log(`⚡ Performance: ${data.performance.total_time}ms total, Cache: ${data.performance.cache_hit}`);
+      
+      return {
+        data: data.data || [],
+        total: data.meta?.total || 0,
+        hasMore: data.meta?.has_more || false,
+        success: true
+      };
+    } catch (error) {
+      console.error('❌ Error completo en fetchProducts:', error);
+      throw error;
     }
-
-    const data: ApiResponse = await response.json();
-    
-    if (!data.success) {
-      throw new Error('Error en la respuesta del servidor');
-    }
-
-    console.log(`⚡ Performance: ${data.performance.total_time}ms total, Cache: ${data.performance.cache_hit}`);
-    
-    return {
-      data: data.data,
-      total: data.meta.total,
-      hasMore: data.meta.has_more,
-      success: true
-    };
   }, [categoria]);
   
   // Hook de paginación
@@ -154,20 +172,46 @@ export default function CategoriaPage() {
   
   // Aplicar filtros a los productos
   const filteredProducts = useMemo(() => {
+    // Si hay búsqueda global activa, usar esos resultados
+    if (activeFilters.searchQuery && activeFilters.searchQuery.trim() && globalSearchResults.length > 0) {
+      console.log(`🎯 Encontrados ${globalSearchResults.length} resultados globales`);
+      
+      // IMPORTANTE: Filtrar solo productos de la subcategoría actual
+      const categoryFilteredResults = globalSearchResults.filter(product => {
+        // Comparar subcategoría (ignorar mayúsculas/minúsculas y espacios)
+        const productSubCategory = (product['Sub Categoria'] || '').toLowerCase().trim();
+        const currentCategory = categoria.toLowerCase().trim();
+        return productSubCategory === currentCategory;
+      });
+      
+      console.log(`📁 Filtrados a subcategoría "${categoria}": ${categoryFilteredResults.length} productos`);
+      
+      // Aplicar otros filtros (precio, stock, etc.) a los resultados de la categoría
+      const productFilter = createProductFilter({
+        ...activeFilters,
+        searchQuery: '' // No aplicar searchQuery de nuevo porque ya vienen filtrados
+      });
+      return categoryFilteredResults.filter(productFilter);
+    }
+    
+    // Si no hay búsqueda, usar comportamiento normal
     if (!isFiltering) return allProducts;
     
     const productFilter = createProductFilter(activeFilters);
     return allProducts.filter(productFilter);
-  }, [allProducts, activeFilters, isFiltering]);
+  }, [allProducts, activeFilters, isFiltering, globalSearchResults, categoria]);
   
   // Alias para mantener compatibilidad
   const products = filteredProducts;
 
   // Resetear cuando cambia la categoría
   useEffect(() => {
-    if (categoria) {
+    if (categoria && categoria.trim() !== '') {
+      console.log(`🔄 Cambiando a categoría: ${categoria}`);
       reset();
       clearFilters(); // Limpiar filtros al cambiar categoría
+    } else {
+      console.warn('⚠️ Categoría inválida o vacía');
     }
   }, [categoria]); // Solo depender de categoria, no de las funciones
   
@@ -216,24 +260,68 @@ export default function CategoriaPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [loadingMore, hasMore, loadMore]);
   
-  // Función de búsqueda para sugerencias
+  // Función de búsqueda GLOBAL (igual que página principal)
   const searchProducts = useCallback(async (query: string): Promise<Product[]> => {
-    if (!query.trim()) return [];
+    if (!query.trim()) {
+      setGlobalSearchResults([]); // Limpiar resultados si no hay búsqueda
+      setIsGlobalSearching(false);
+      return [];
+    }
     
-    // Buscar en productos ya cargados
-    const matchingProducts = allProducts.filter(product => {
-      const searchText = query.toLowerCase();
-      const productName = product.Nombre.toLowerCase();
-      const productDesc = (product.Descripcion || '').toLowerCase();
-      const productCategory = product['Sub Categoria'].toLowerCase();
+    try {
+      console.log(`🔍 Búsqueda global en categoría ${categoria} para: "${query}"`);
+      setIsGlobalSearching(true);
       
-      return productName.includes(searchText) || 
-             productDesc.includes(searchText) || 
-             productCategory.includes(searchText);
-    });
-    
-    return matchingProducts.slice(0, 10); // Limitar resultados para sugerencias
-  }, [allProducts]);
+      // USAR API DE BÚSQUEDA GLOBAL - no filtrar solo productos locales
+      const response = await fetch(getApiUrl(`/api/v1/productos/buscar/${encodeURIComponent(query)}?limit=100`), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'default',
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data) {
+          console.log(`✅ Búsqueda global encontró: ${data.data.length} productos`);
+          setGlobalSearchResults(data.data); // GUARDAR resultados globales
+          return data.data.slice(0, 10); // Devolver solo 10 para sugerencias
+        }
+      }
+      
+      console.warn('⚠️ API de búsqueda falló, usando búsqueda local como fallback');
+      setIsGlobalSearching(false);
+      
+      // FALLBACK: buscar solo en productos ya cargados si API falla
+      const searchTerm = query.toLowerCase().trim();
+      const matchingProducts = allProducts.filter(product => {
+        const nombre = (product.Nombre || '').toLowerCase();
+        const modelo = (product.Modelo || '').toLowerCase();
+        const tamaño = (product.Tamaño || '').toLowerCase();
+        const categoria = (product.Categoria || '').toLowerCase();
+        const subCategoria = (product['Sub Categoria'] || '').toLowerCase();
+        const descripcion = (product.Descripcion || '').toLowerCase();
+        
+        return searchTerm && (
+          nombre.includes(searchTerm) ||
+          modelo.includes(searchTerm) ||
+          tamaño.includes(searchTerm) ||
+          categoria.includes(searchTerm) ||
+          subCategoria.includes(searchTerm) ||
+          descripcion.includes(searchTerm)
+        );
+      });
+      
+      setGlobalSearchResults(matchingProducts);
+      return matchingProducts.slice(0, 10);
+      
+    } catch (error) {
+      console.error('❌ Error en búsqueda global:', error);
+      setIsGlobalSearching(false);
+      return [];
+    }
+  }, [categoria, allProducts]);
   
   // Hook de búsqueda con debounce
   const search = useSearch(searchProducts, {
@@ -298,6 +386,12 @@ export default function CategoriaPage() {
   const handleSearchChange = useCallback((value: string) => {
     search.setQuery(value);
     updateFilter('searchQuery', value);
+    
+    // Limpiar resultados globales si se borra la búsqueda
+    if (!value.trim()) {
+      setGlobalSearchResults([]);
+      setIsGlobalSearching(false);
+    }
   }, [search.setQuery, updateFilter]);
   
   // Manejar búsqueda directa
@@ -454,15 +548,32 @@ export default function CategoriaPage() {
           isOpen={showFilterSidebar}
           onClose={() => setShowFilterSidebar(false)}
           onFiltersChange={(newFilters) => {
-            // Actualizar todos los filtros
-            updateFilter('subcategorias', newFilters.subcategorias);
-            updateFilter('tamanos', newFilters.tamanos);
-            updateFilter('stock', newFilters.stock);
-            updateFilter('precioRange', newFilters.precioRange);
-            
-            toast.success('Filtros aplicados', {
-              description: `Se aplicaron ${Object.values(newFilters).flat().length} filtros`
-            });
+            try {
+              console.log('🔧 Aplicando filtros:', newFilters);
+              
+              // Actualizar todos los filtros
+              updateFilter('subcategorias', newFilters.subcategorias || []);
+              updateFilter('tamanos', newFilters.tamanos || []);
+              updateFilter('stock', newFilters.stock || []);
+              updateFilter('precioRange', newFilters.precioRange || [0, 1000]);
+              
+              // Mantener searchQuery si existe
+              if (newFilters.searchQuery !== undefined) {
+                updateFilter('searchQuery', newFilters.searchQuery);
+              }
+              
+              const filterCount = (newFilters.subcategorias?.length || 0) + 
+                                 (newFilters.tamanos?.length || 0) + 
+                                 (newFilters.stock?.length || 0) + 
+                                 (newFilters.searchQuery?.trim() ? 1 : 0);
+              
+              toast.success('Filtros aplicados', {
+                description: `Se aplicaron ${filterCount} filtros`
+              });
+            } catch (error) {
+              console.error('❌ Error aplicando filtros:', error);
+              toast.error('Error al aplicar filtros');
+            }
           }}
           availableFilters={availableFilters}
           activeFilters={activeFilters}
@@ -510,7 +621,11 @@ export default function CategoriaPage() {
               No hay productos disponibles
             </h3>
             <p className="text-gray-600 mb-4">
-              No se encontraron productos en la categoría {formatCategoryName(categoria)}
+              {activeFilters.searchQuery && activeFilters.searchQuery.trim() ? (
+                <>No se encontraron productos con "{activeFilters.searchQuery}" en {formatCategoryName(categoria)}</>
+              ) : (
+                <>No se encontraron productos en la categoría {formatCategoryName(categoria)}</>
+              )}
             </p>
             <Link href="/">
               <Button variant="liquorOrange">
