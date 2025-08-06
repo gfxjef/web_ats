@@ -162,6 +162,9 @@ export default function ProductDetailPage() {
     }, quantity);
     
     toast.productAdded(product.Nombre, quantity, product['Precio B']);
+    
+    // Resetear la cantidad a 1 después de agregar al carrito
+    setQuantity(1);
   };
 
   // Manejar toggle de wishlist
@@ -388,23 +391,23 @@ export default function ProductDetailPage() {
               {product.Stock === 'Sin Stock' ? (
                 <span className="text-red-600 font-medium">Sin Stock</span>
               ) : (
-                <div className="flex items-center bg-gray-100 rounded-full px-3 py-2">
+                <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
                   <button 
                     onClick={() => handleQuantityChange(-1)}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
+                    className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors touch-manipulation"
                     disabled={quantity <= 1}
                   >
-                    <Minus className="w-3 h-3 text-gray-600" />
+                    <Minus className="w-4 h-4 text-gray-600" />
                   </button>
-                  <span className="mx-3 text-sm font-semibold text-gray-900 min-w-[1.5rem] text-center">
+                  <span className="mx-4 text-base font-semibold text-gray-900 min-w-[2rem] text-center">
                     {quantity}
                   </span>
                   <button 
                     onClick={() => handleQuantityChange(1)}
-                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
+                    className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors touch-manipulation"
                     disabled={quantity >= 99}
                   >
-                    <Plus className="w-3 h-3 text-gray-600" />
+                    <Plus className="w-4 h-4 text-gray-600" />
                   </button>
                 </div>
               )}
