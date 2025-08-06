@@ -388,7 +388,25 @@ export default function ProductDetailPage() {
               {product.Stock === 'Sin Stock' ? (
                 <span className="text-red-600 font-medium">Sin Stock</span>
               ) : (
-                <span className="text-green-600 font-medium">Disponible</span>
+                <div className="flex items-center bg-gray-100 rounded-full px-3 py-2">
+                  <button 
+                    onClick={() => handleQuantityChange(-1)}
+                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
+                    disabled={quantity <= 1}
+                  >
+                    <Minus className="w-3 h-3 text-gray-600" />
+                  </button>
+                  <span className="mx-3 text-sm font-semibold text-gray-900 min-w-[1.5rem] text-center">
+                    {quantity}
+                  </span>
+                  <button 
+                    onClick={() => handleQuantityChange(1)}
+                    className="w-6 h-6 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
+                    disabled={quantity >= 99}
+                  >
+                    <Plus className="w-3 h-3 text-gray-600" />
+                  </button>
+                </div>
               )}
             </div>
           </div>
@@ -455,44 +473,24 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Bottom Section with Quantity and Add to Cart */}
-      <div className="fixed bottom-16 left-0 right-0 bg-white border-t border-gray-200 px-4 py-4 z-10 shadow-lg">
-        <div className="max-w-md mx-auto">
-          <div className="flex items-center justify-between space-x-4">
-            {/* Quantity Selector */}
-            <div className="flex items-center bg-gray-100 rounded-full px-4 py-3">
-              <button 
-                onClick={() => handleQuantityChange(-1)}
-                className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
-                disabled={quantity <= 1}
-              >
-                <Minus className="w-4 h-4 text-gray-600" />
-              </button>
-              <span className="mx-4 text-lg font-semibold text-gray-900 min-w-[2rem] text-center">
-                {quantity}
-              </span>
-              <button 
-                onClick={() => handleQuantityChange(1)}
-                className="w-8 h-8 flex items-center justify-center hover:bg-gray-200 rounded-full transition-colors"
-                disabled={quantity >= 99}
-              >
-                <Plus className="w-4 h-4 text-gray-600" />
-              </button>
+      <div className="fixed bottom-20 left-4 right-4 bg-white border border-gray-200 rounded-full px-4 py-4 z-10 max-w-md mx-auto mb-2">
+          <div className="flex items-center justify-between space-x-4 h-full">
+            {/* Total Amount */}
+            <div className="flex flex-col justify-center">
+              <span className="text-xs text-gray-500">Monto Total:</span>
+              <span className="text-lg font-bold text-gray-900">S/{totalPrice}</span>
             </div>
 
             {/* Add to Cart Button */}
             <Button 
               onClick={handleAddToCart}
               disabled={product.Stock === 'Sin Stock'}
-              className="flex-1 bg-liquor-orange hover:bg-liquor-orange/90 text-white font-semibold py-4 px-6 rounded-full text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 bg-liquor-orange hover:bg-liquor-orange/90 text-white font-semibold py-4 px-6 rounded-full text-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               <ShoppingCart className="w-5 h-5 mr-2" />
-              {product.Stock === 'Sin Stock' ? 'Sin Stock' : 'Add'}
-              {product.Stock !== 'Sin Stock' && (
-                <span className="ml-2">S/{totalPrice}</span>
-              )}
+              {product.Stock === 'Sin Stock' ? 'Sin Stock' : 'Agregar'}
             </Button>
           </div>
-        </div>
       </div>
 
       {/* Bottom padding to account for fixed sections (product actions + navigation) */}
