@@ -817,7 +817,7 @@ export default function HomePage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => searchQuery && setShowSearchDropdown(true)}
             onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-            placeholder="Search for Beer, Wine, Liquor & More"
+            placeholder="Buscar las Cervezas, y más"
             className="pl-10 py-3 rounded-xl border-gray-200 bg-white text-gray-600"
           />
           
@@ -848,7 +848,11 @@ export default function HomePage() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-gray-900 text-sm truncate">{product.Nombre}</h4>
-                        <p className="text-xs text-gray-500 truncate">{product.Categoria} • {product.Tamaño}</p>
+                        <p className="text-xs text-gray-500 truncate">
+                          {product.Modelo && <>{product.Modelo}</>}
+                          {product.Modelo && product.Tamaño && <> • </>}
+                          {product.Tamaño && <>{product.Tamaño}</>}
+                        </p>
                         <p className="text-sm font-semibold text-gray-900">S/{product['Precio B']}</p>
                       </div>
                     </div>
@@ -1078,7 +1082,11 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{combo.Nombre}</h4>
-                  <p className="text-xs text-gray-500 mt-1 mb-2">{combo.Modelo}</p>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">
+                    {combo.Modelo && <>{combo.Modelo}</>}
+                    {combo.Modelo && combo.Tamaño && <> • </>}
+                    {combo.Tamaño && <>{combo.Tamaño}</>}
+                  </p>
                   <div className="flex items-center space-x-2">
                     <span className="text-lg font-bold text-gray-900">S/{combo['Precio B']}</span>
                     <span className="text-sm text-gray-500 line-through">S/{combo['Precio J']}</span>
@@ -1150,7 +1158,11 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{whisky.Nombre}</h4>
-                  <p className="text-xs text-gray-500 mt-1 mb-2">{whisky.Modelo}</p>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">
+                    {whisky.Modelo && <>{whisky.Modelo}</>}
+                    {whisky.Modelo && whisky.Tamaño && <> • </>}
+                    {whisky.Tamaño && <>{whisky.Tamaño}</>}
+                  </p>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-gray-900">S/{whisky['Precio B']}</span>
                     <div className="flex items-center space-x-1">
@@ -1225,7 +1237,11 @@ export default function HomePage() {
                     </div>
                   </div>
                   <h4 className="font-semibold text-gray-900 text-sm leading-tight line-clamp-2">{cerveza.Nombre}</h4>
-                  <p className="text-xs text-gray-500 mt-1 mb-2">{cerveza.Tamaño}</p>
+                  <p className="text-xs text-gray-500 mt-1 mb-2">
+                    {cerveza.Modelo && <>{cerveza.Modelo}</>}
+                    {cerveza.Modelo && cerveza.Tamaño && <> • </>}
+                    {cerveza.Tamaño && <>{cerveza.Tamaño}</>}
+                  </p>
                   <div className="flex items-center justify-between">
                     <span className="text-lg font-bold text-gray-900">S/{cerveza['Precio B']}</span>
                     <div className="flex items-center space-x-1">

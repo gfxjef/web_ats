@@ -154,15 +154,11 @@ const CartItem = React.forwardRef<HTMLDivElement, CartItemProps>(
                 {/* Información adicional */}
                 {variant !== "compact" && (
                   <div className="flex items-center space-x-2 mt-1">
-                    <span className="text-xs text-gray-500">{item.Tamaño}</span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs text-gray-500">{item['Sub Categoria']}</span>
-                    {item.SKU && (
-                      <>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-400">SKU: {item.SKU}</span>
-                      </>
-                    )}
+                    {item.Modelo && <span className="text-xs text-gray-500">{item.Modelo}</span>}
+                    {item.Modelo && item.Tamaño && <span className="text-xs text-gray-400">•</span>}
+                    {item.Tamaño && <span className="text-xs text-gray-500">{item.Tamaño}</span>}
+                    {item.Tamaño && item['Sub Categoria'] && <span className="text-xs text-gray-400">•</span>}
+                    {item['Sub Categoria'] && <span className="text-xs text-gray-500">{item['Sub Categoria']}</span>}
                   </div>
                 )}
 

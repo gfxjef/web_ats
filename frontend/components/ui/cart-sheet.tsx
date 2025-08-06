@@ -63,23 +63,62 @@ const CartSheet = React.forwardRef<HTMLDivElement, CartSheetProps>(
       decrementQuantity,
     } = cart;
 
+    // Función para obtener URL de API
+    const getApiUrl = (endpoint: string): string => {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:5001';
+      return `${baseUrl}${endpoint}`;
+    };
+
     // Cargar productos sugeridos cuando se abre el carrito
     useEffect(() => {
-      if (isOpen && hasItems) {
-        // Obtener categorías únicas del carrito (compatible con versiones anteriores de TS)
-        const categoriesSet = new Set(items.map(item => item.Categoria));
-        const categories = Array.from(categoriesSet);
-        
-        // Por ahora, usar productos de ejemplo (en producción esto vendría de la API)
-        const mockSuggestions: SuggestedProduct[] = [
-          { id: 101, Nombre: "Ron Bacardí Añejo", 'Precio B': 89.90, Categoria: "RON" },
-          { id: 102, Nombre: "Whisky Johnnie Walker", 'Precio B': 129.90, Categoria: "WHISKY" },
-          { id: 103, Nombre: "Vodka Absolut", 'Precio B': 79.90, Categoria: "VODKA" },
-          { id: 104, Nombre: "Tequila Jose Cuervo", 'Precio B': 99.90, Categoria: "TEQUILA" },
-        ];
-        
-        setSuggestedProducts(mockSuggestions);
-      }
+      const loadSuggestedProducts = async () => {
+        if (!isOpen || !hasItems) return;
+
+        try {
+          // Obtener subcategorías únicas del carrito
+          const subCategoriesSet = new Set(items.map(item => item['Sub Categoria']).filter(Boolean));
+          const subCategories = Array.from(subCategoriesSet);
+          
+          if (subCategories.length === 0) return;
+
+          // Seleccionar aleatoriamente una subcategoría para obtener productos relacionados
+          const randomSubCategory = subCategories[Math.floor(Math.random() * subCategories.length)];
+          
+          // Llamar a la API para obtener productos de la subcategoría
+          const response = await fetch(
+            getApiUrl(`/api/v1/productos/subcategoria/${encodeURIComponent(randomSubCategory)}?limit=8`),
+            {
+              method: 'GET',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              cache: 'default',
+            }
+          );
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.success && data.data) {
+              // Filtrar productos que NO estén ya en el carrito
+              const cartProductIds = new Set(items.map(item => item.id));
+              const filteredSuggestions = data.data
+                .filter((product: any) => !cartProductIds.has(product.id))
+                .slice(0, 8); // Máximo 8 productos sugeridos
+              
+              // Mezclar el orden de los productos aleatoriamente
+              const shuffled = filteredSuggestions.sort(() => Math.random() - 0.5);
+              
+              setSuggestedProducts(shuffled);
+            }
+          }
+        } catch (error) {
+          console.error('Error cargando productos sugeridos:', error);
+          // En caso de error, usar productos vacíos
+          setSuggestedProducts([]);
+        }
+      };
+
+      loadSuggestedProducts();
     }, [isOpen, hasItems, items]);
 
     // Función para generar y enviar pedido por WhatsApp
@@ -179,8 +218,8 @@ Gracias! 😊`;
     };
 
     // Calcular barra de progreso para envío gratis
-    const freeShippingProgress = Math.min((summary.subtotal / 1500) * 100, 100);
-    const remainingForFreeShipping = Math.max(1500 - summary.subtotal, 0);
+    const freeShippingProgress = Math.min((summary.subtotal / 500) * 100, 100);
+    const remainingForFreeShipping = Math.max(500 - summary.subtotal, 0);
 
     return (
       <>
@@ -257,7 +296,7 @@ Gracias! 😊`;
                       <div className="flex items-center space-x-2">
                         <Truck className="w-4 h-4 text-amber-600" />
                         <span className="text-sm font-medium text-amber-800">
-                          Envío gratis desde S/1,500
+                          Envío gratis desde S/500
                         </span>
                       </div>
                       {remainingForFreeShipping > 0 && (
@@ -412,10 +451,6 @@ Gracias! 😊`;
                 <div className="flex items-center space-x-1">
                   <Gift className="w-3 h-3" />
                   <span>Envío rápido</span>
-                </div>
-                <div className="flex items-center space-x-1">
-                  <AlertCircle className="w-3 h-3" />
-                  <span>30 días devolución</span>
                 </div>
               </div>
             </div>

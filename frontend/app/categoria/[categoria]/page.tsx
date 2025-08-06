@@ -213,7 +213,8 @@ export default function CategoriaPage() {
     } else {
       console.warn('⚠️ Categoría inválida o vacía');
     }
-  }, [categoria, reset, clearFilters]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoria]); // Solo depender de categoria para evitar bucles
   
   // Extraer filtros disponibles de los productos cargados
   useEffect(() => {
@@ -698,7 +699,9 @@ export default function CategoriaPage() {
                     </h4>
                     
                     <p className="text-xs text-gray-500 mb-2">
-                      {product.Tamaño} • {product['Sub Categoria']}
+                      {product.Modelo && <>{product.Modelo}</>}
+                      {product.Modelo && product.Tamaño && <> • </>}
+                      {product.Tamaño && <>{product.Tamaño}</>}
                     </p>
                     
                     <div className="flex items-center justify-between">
