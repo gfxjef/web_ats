@@ -29,6 +29,17 @@ export default function CategoriasPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Configurar SEO dinámicamente
+  useEffect(() => {
+    document.title = "Categorías de Licores | Licorería ATS - San Juan de Lurigancho";
+    
+    // Agregar meta description
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', 'Explora todas nuestras categorías de licores: cerveza en San Juan de Lurigancho, whisky Lima, vodka, ron, pisco peruano, vino y más. Delivery rápido en SJL.');
+    }
+  }, []);
+
   // Cargar categorías
   useEffect(() => {
     const loadCategories = async () => {
@@ -122,9 +133,9 @@ export default function CategoriasPage() {
               </Button>
             </Link>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Categorías</h1>
+              <h1 className="text-xl font-bold text-gray-900">Categorías de Licores</h1>
               <p className="text-sm text-gray-600">
-                {loading ? 'Cargando...' : `${filteredCategories.length} categorías disponibles`}
+                {loading ? 'Cargando...' : `${filteredCategories.length} tipos de bebidas en San Juan de Lurigancho`}
               </p>
             </div>
           </div>
@@ -136,7 +147,7 @@ export default function CategoriasPage() {
           <Input 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Buscar categorías..."
+            placeholder="Buscar cerveza, whisky, vodka..."
             className="pl-10 py-3 rounded-xl border-gray-200 bg-white text-gray-600"
           />
         </div>

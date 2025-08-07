@@ -99,9 +99,25 @@ This is a full-stack liquor store application with separate backend and frontend
 ### Frontend Architecture (`frontend/`)
 - **Framework**: Next.js 13.5.1 with App Router
 - **UI Components**: shadcn/ui components in `components/ui/`
-- **Main Page**: `app/page.tsx` - Optimized loading with sequential API calls
+- **Main Pages**: 
+  - `app/page.tsx` - Home page with product categories and search
+  - `app/product/[id]/page.tsx` - Product detail page with cart functionality
+  - `app/categoria/[categoria]/page.tsx` - Category products listing
+  - `app/categorias/page.tsx` - All categories overview
+  - `app/search/page.tsx` - Search results page
+  - `app/checkout/page.tsx` - Checkout form and order processing
+  - `app/order-confirmation/page.tsx` - Order confirmation page
 - **Styling**: Tailwind CSS with responsive design
 - **API Integration**: Environment-based API URL configuration
+- **State Management**: Context API for cart functionality (`contexts/cart-context.tsx`)
+- **Custom Hooks**:
+  - `use-cart.ts` - Cart operations
+  - `use-analytics.ts` - Google Analytics integration
+  - `use-debounce.ts` - Input debouncing
+  - `use-filters.ts` - Product filtering
+  - `use-liquor-toast.ts` - Custom toast notifications
+  - `use-pagination.ts` - Pagination logic
+  - `use-related-products.ts` - Related products fetching
 
 ### Key Performance Optimizations
 1. **Database Indexes**: 8 optimized indexes for fast product queries
@@ -146,10 +162,11 @@ FLASK_DEBUG=True
 ```
 
 ### Frontend Environment Variables
-Required in `frontend/.env`:
+Required in `frontend/.env.local`:
 ```
 NEXT_PUBLIC_API_URL=http://127.0.0.1:5001
 NODE_ENV=development
+NEXT_PUBLIC_GA_ID=G-XXXXXXXXXX  # Optional: Google Analytics ID
 ```
 
 ## Development Workflow
@@ -175,3 +192,59 @@ Both backend and frontend include performance tracking:
 - Frontend can be deployed to Vercel or similar platforms
 - Environment variables must be configured in deployment platforms
 - Database credentials are production-specific and managed securely
+
+## Analytics and Tracking
+
+### Google Analytics Integration
+The application includes Google Analytics 4 (GA4) integration for tracking user behavior:
+
+**Setup**: Configure `NEXT_PUBLIC_GA_ID` in `frontend/.env.local` with your GA4 measurement ID
+
+**Tracked Events**:
+- Search queries
+- Add to cart actions
+- Product views
+- Checkout initiation
+- Order completion
+
+**Implementation**: See `frontend/hooks/use-analytics.ts` and `frontend/components/GoogleAnalytics.tsx`
+
+## Security Features
+
+### Middleware Security Headers (`frontend/middleware.ts`)
+Production environment includes comprehensive security headers:
+- **X-Frame-Options**: DENY - Prevents clickjacking
+- **X-Content-Type-Options**: nosniff - Prevents MIME type sniffing
+- **X-XSS-Protection**: 1; mode=block - XSS protection
+- **Referrer-Policy**: strict-origin-when-cross-origin
+- **Content-Security-Policy**: Restrictive CSP with specific allowlists
+- **Strict-Transport-Security**: HSTS with 1-year max-age
+
+### Allowed External Resources
+- Images: Pexels, i.ibb.co
+- API connections: web-ats.onrender.com, web-ats.vercel.app, atusaludlicoreria.com
+
+## UI Components Library
+The project uses shadcn/ui components with extensive customization:
+
+### Key Components
+- **Product Components**: product-card, product-card-skeleton
+- **Cart System**: cart-button, cart-item, cart-sheet
+- **Navigation**: bottom-navigation, hamburger-menu, breadcrumb
+- **Forms**: checkout-form with react-hook-form and zod validation
+- **Feedback**: Custom toast notifications with liquor-themed styling
+- **Search**: search-input with debouncing
+- **Filters**: filter-sidebar for product filtering
+- **Social**: social-dropdown for sharing
+
+### Form Validation
+Using react-hook-form with zod schemas for:
+- Checkout form validation
+- Email and phone number validation
+- Required field validation
+
+## Testing and Verification
+- Backend health check: `curl http://127.0.0.1:5001/health`
+- Frontend build verification: `npm run build`
+- Linting: `npm run lint`
+- TypeScript checking: Built into Next.js build process

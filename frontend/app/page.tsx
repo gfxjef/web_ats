@@ -817,7 +817,7 @@ export default function HomePage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => searchQuery && setShowSearchDropdown(true)}
             onBlur={() => setTimeout(() => setShowSearchDropdown(false), 200)}
-            placeholder="Buscar las Cervezas, y más"
+            placeholder="Buscar cerveza, whisky, vodka en San Juan de Lurigancho..."
             className="pl-10 py-3 rounded-xl border-gray-200 bg-white text-gray-600"
           />
           
@@ -933,45 +933,50 @@ export default function HomePage() {
       {/* Promotional Banners */}
       <div className="px-4 pb-6">
         <div className="flex space-x-3 overflow-x-auto">
-          {/* Orange Banner */}
-          <div className="min-w-[300px] bg-gradient-to-br from-orange-400 via-orange-500 to-red-600 rounded-3xl p-6 text-white relative overflow-hidden">
-            <div className="relative z-10">
-              <h2 className="text-3xl font-bold mb-1">UP TO</h2>
-              <h2 className="text-3xl font-bold mb-2">30% OFF*</h2>
-              <p className="text-sm mb-4 opacity-90">Don&apos;t Miss Out Order Today!</p>
-              <Button className="bg-white text-orange-600 hover:bg-gray-100 font-semibold px-6 py-2 rounded-full">
-                SHOP NOW
-              </Button>
-            </div>
-            
-            {/* Decorative elements */}
-            <div className="absolute top-4 right-4 text-white opacity-20">
-              <div className="w-6 h-1 bg-white rounded-full mb-2"></div>
-              <div className="w-4 h-1 bg-white rounded-full mb-2"></div>
-              <div className="w-8 h-1 bg-white rounded-full"></div>
-            </div>
-            
-            {/* Beer can image */}
-            <div className="absolute -right-4 -top-2 w-32 h-40">
-              <Image 
-                src="https://images.pexels.com/photos/1552630/pexels-photo-1552630.jpeg?auto=compress&cs=tinysrgb&w=200&h=300&fit=crop"
-                alt="Beer can"
-                width={120}
-                height={160}
-                className="object-cover transform rotate-12"
-              />
-            </div>
-          </div>
+          {/* Mike's Combo Banner */}
+          <Link 
+            href="/search?nombre=Mike%27s"
+            className="min-w-[280px] block relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <Image 
+              src="https://i.ibb.co/MDdGwqHk/MIKES-COMBO.webp"
+              alt="Mike's Combo - Ofertas especiales"
+              width={280}
+              height={211}
+              className="w-full h-[211px] object-cover"
+              priority
+            />
+          </Link>
 
-          {/* Purple Banner */}
-          <div className="min-w-[200px] bg-gradient-to-br from-purple-600 to-purple-800 rounded-3xl p-6 text-white relative overflow-hidden">
-            <h2 className="text-2xl font-bold mb-2">UP TO</h2>
-            <h2 className="text-2xl font-bold mb-2">35% OFF</h2>
-            <p className="text-sm mb-4 opacity-90">Don&apos;t...</p>
-            <Button className="bg-white text-purple-600 hover:bg-gray-100 font-semibold px-4 py-2 rounded-full text-sm">
-              SHOP NOW
-            </Button>
-          </div>
+          {/* Pilsen Combo Banner */}
+          <Link 
+            href="/search?nombre=pilsen"
+            className="min-w-[280px] block relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <Image 
+              src="https://i.ibb.co/DHjSz427/pilsen-COMBO.webp"
+              alt="Pilsen Combo - Ofertas especiales"
+              width={280}
+              height={211}
+              className="w-full h-[211px] object-cover"
+              priority
+            />
+          </Link>
+
+          {/* Vodka Xtasis Combo Banner */}
+          <Link 
+            href="/search?nombre=xtasis"
+            className="min-w-[280px] block relative rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
+          >
+            <Image 
+              src="https://i.ibb.co/Nd1DYNYf/VOKDACOMBO.webp"
+              alt="Vodka Xtasis Combo - Ofertas especiales"
+              width={280}
+              height={211}
+              className="w-full h-[211px] object-cover"
+              priority
+            />
+          </Link>
         </div>
       </div>
 

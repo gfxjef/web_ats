@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { RelatedProducts } from "@/components/ui/related-products";
 import { useLiquorToast } from "@/hooks/use-liquor-toast";
 import { useCartContext } from "@/contexts/cart-context";
+import { ProductStructuredData, BreadcrumbStructuredData } from "@/components/seo/structured-data";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -302,8 +303,19 @@ export default function ProductDetailPage() {
     );
   }
 
+  // Breadcrumb items para SEO
+  const breadcrumbItems = [
+    { name: 'Inicio', url: 'https://atusaludlicoreria.com' },
+    { name: product.Categoria, url: `https://atusaludlicoreria.com/categoria/${product.Categoria}` },
+    { name: product.Nombre, url: `https://atusaludlicoreria.com/product/${product.id}` }
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Datos estructurados para SEO */}
+      <ProductStructuredData product={product} />
+      <BreadcrumbStructuredData items={breadcrumbItems} />
+      
       {/* Header */}
       <div className="bg-white px-4 py-3 flex items-center justify-between sticky top-0 z-20">
         <button 
