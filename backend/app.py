@@ -29,6 +29,8 @@ def create_app():
             "origins": [
                 "https://web-ats.vercel.app",
                 "https://www.atusaludlicoreria.com",
+                "https://atusaludlicoreria.com",
+                "https://web-ats-git-main-gfxjefs-projects.vercel.app",
                 "http://localhost:3000"  # Para desarrollo local
             ],
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
